@@ -1,29 +1,28 @@
-//#pragma config(Sensor,  .... )
-//                  PLANTILLA P2
-//  Make the robot move at a certain speed (linear and angular), so it can drive along an 8
-//  Update the robot internal odometry estimation, so it aproximately "knows" where it is all the time
-//
+/*
+* Hace que el robot se mueva a una cierta velocidad (lineal o angular) en una trayectoria
+* en 8. Actualiza internamente la odometría así que puede saber donde está en cada momento.
+*/
 
 #include "mutexLib.c"
 #include "positionLib.c"
 
-// ROBOT PARAMETERS
-float R = 26.0; // mm
-float L = 87.0; // mm
+// Parámetros del robot.
+float R = 26.0; // Radio de la rueda.
+float L = 87.0; // Longitud del eje.
 
-TPosition robot_odometry;       // WE SHOULD ACCESS THIS VARIABLE with a "semaphore".
-TMutex semaphore_odometry = 0;  // Important to initialize to zero!!! Not acquired.
+TPosition robot_odometry;       // Posición para odometría.
+TMutex semaphore_odometry = 0;  // Semáforo para odometría.
 
 
-// FUNCTION!!
+// Función que calcula la velocidad de cada rueda y se le asigna a los motores.
 int setSpeed(float v, float w)
 {
 
 // start the motors so that the robot gets v mm/s linear speed and w RADIAN/s angular speed
 
-  float w_l =1, w_r=1;
-  float mR = 1,mL = 1,nR = 0,nL = 0; // parameters of power/speed transfer
-  float motorPowerRight = 15, motorPowerLeft = 15;
+  float w_l =1, w_r=1;  // Velocidad angular de cada rueda.
+  float mR = 1,mL = 1,nR = 0,nL = 0; // Parámetros para la transferencia a los motores.
+  float motorPowerRight = 15, motorPowerLeft = 15;  // Potencia de cada motor.
 
   // Calculamos la velocidad angular de cada rueda.
   w_r = v/R + w*L/(2.0*R);
@@ -36,37 +35,43 @@ int setSpeed(float v, float w)
 	// Se asigna la potencia al motor.
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
-	motor[motorA] = 10;
+	//motor[motorA] = 10;
 
-	wait1Msec(1000);
+	wait1Msec(1000);     // Se asigna un tiempo de espera.
 
   return 0;
 }
 
-// TASK TO BE LAUNCHED SIMULTANEOUSLY to "main"!!
+// Función que va actualizando la odometría para saber en todo momento donde
+// está el robot.
 /*task updateOdometry(){
-  int cycle = ??? ; // we want to update odometry every ?? s
-  float dSl,dSr,dx,dy, dT;
+  int cycle = ??? ; // Número de ciclos para actualizar odometría.
+  float dSl,dSr,dx,dy, dT;    // Variables para la odometría.
 
-  while (true){
+  while (true){       // Bucle infinito que va actualizando.
 
     timeAux=nPgmTime;
-	// read tachometers, and estimate how many mm. each wheel has moved since last update
+    // Se leen los tacómetros y se estima cuantos mm se ha movido cada rueda.
+    float theta = robot_odometry -> th + w*incTiempo;
+    float x = v*incTiempo * cos(w*incTiempo + theta/2);
+    float y = v*incTiempo * sin(w*incTiempo + theta/2);
+
+    set_position(robot_odometry, x, y, theta);
     // RESET tachometer right after to start including the "moved" degrees turned in next iteration
+    nMotorEncoder[motorC] = 0;
+    nMotorEncoder[motorB] = 0;
 
-
-
-   	// show each step on screen and write in a file
+    // Mostrar cada paso en la pantalla y escribirlo en un fichero.
 		nxtDisplayTextLine(2, "ODOMETRY NEW VALUE");
-    	nxtDisplayTextLine(3, "x,y: %2.2f %2.2f", robot_odometry.x,robot_odometry.y);
-    	nxtDisplayTextLine(4, "theta: %2.2f ", robot_odometry.th);
-	  	// file ...
+    nxtDisplayTextLine(3, "x,y: %2.2f %2.2f", robot_odometry.x,robot_odometry.y);
+    nxtDisplayTextLine(4, "theta: %2.2f ", robot_odometry.th);
+	  // Escribir en fichero.
 
 
 
 
 
-	 // Wait until cycle is completed?
+	 // Esperar hasta completar el ciclo.
 	 // ...
 
   }
@@ -74,44 +79,44 @@ int setSpeed(float v, float w)
 }*/
 
 
-//the program below uses feedback from encoders to determine how much the robot turns.
+// Programa principal que realiza la trayectoria asignando velocidades a las ruedas.
 task main()
 {
 
-  float v = 0, w = 3.14159; //speeds
-  int radio; //Trajectory R
+  float v = 0, w = 3.14159; // Velocidades lineal y angular.
+  int radio; // Radio de la trayectoria.
   int circunf; // L (semi-dist. between robot wheels)
 
-  // config.
+  // Configuración
 
 
-  // reset odometry values and motor encoders.
-
+  // Resetear valores de odometría y encoders de motores.
   // Encoders a 0.
 	nMotorEncoder[motorB] = 0;
 	nMotorEncoder[motorC] = 0;
+  // Valores de odometría a 0.
 
-  //StartTask(updateOdometry);
+  // Se inicializa la tarea de actualizar odometría.
 
   // Se establecen la velocidad lineal y angular.
 	setSpeed(v,w);
 
-  // turn 90 degrees on the robot
+  // Se gira el robot 90º.
 
 
-  // generate 1st part of trayectory
-
-
-
-  // generate 2nd part of trayectory
+  // Se genera la primera parte de la trayectoria.
 
 
 
-  // generate 3rd part of trayectory
+  // Se genera la segunda parte de la trayectoria.
 
 
 
-  // generate 4th part of trayectory
+  // Se genera la tercera parte de la trayectoria.
+
+
+
+  // Se genera la cuarta parte de la trayectoria.
 
 
 }
