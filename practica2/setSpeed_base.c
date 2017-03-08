@@ -82,9 +82,9 @@ int setSpeed(float v, float w)
 // Programa principal que realiza la trayectoria asignando velocidades a las ruedas.
 task main()
 {
-
+  float pi = 3.14159;
   float v = 0, w = 3.14159; // Velocidades lineal y angular.
-  int radio; // Radio de la trayectoria.
+  float radio; // Radio de la trayectoria.
   int circunf; // L (semi-dist. between robot wheels)
 
   // Configuración
@@ -101,22 +101,36 @@ task main()
   // Se establecen la velocidad lineal y angular.
 	setSpeed(v,w);
 
+	//Trayectoria 8 a partir de aqui.
+	//Trayectoria 8 a partir de aqui.
+	
   // Se gira el robot 90º.
-
-
+	w = -pi/2;
+	setSpeed(0,-pi/2);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
+	wait1Msec((-pi/2)/w);	//Se espera a que el robot gire -90 grados.
+	
   // Se genera la primera parte de la trayectoria.
-
-
+  
+	radio = 40.0;
+	v = 20.0;
+	w = v/radio;			//Se calcula la velocidad angular.
+	setSpeed(v,w);
+	wait1Msec(pi/w);		//Se espera el tiempo que tardara en girar 180 grados.
 
   // Se genera la segunda parte de la trayectoria.
-
+	w = -w;		//Se cambia la dircción del giro.
+	setSpeed(v,w);
+	wait1Msec((2*pi)/w);	//Se espera el tiempo que tardara el robot en girar 360 grados.
 
 
   // Se genera la tercera parte de la trayectoria.
-
-
+	
+	w = -w; //Se vuelve a cambiar la direccion de giro.
+	setSpeed(v,w);
+	wait1Msec(pi/w);	//Se espera el tiempo que tardara el robot en girar 180 grados.
 
   // Se genera la cuarta parte de la trayectoria.
-
-
+	w = pi/2;
+	setSpeed(0,w);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
+	wait1Msec((pi/2)/w);	//Se espera a que el robot gire 90 grados.
 }
