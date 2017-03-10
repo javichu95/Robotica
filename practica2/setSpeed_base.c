@@ -21,7 +21,7 @@ int setSpeed(float v, float w)
 // start the motors so that the robot gets v mm/s linear speed and w RADIAN/s angular speed
 
   float w_l =1, w_r=1;  // Velocidad angular de cada rueda.
-  float mR = 5.8115, mL = 5.8010, nR = 0, nL = 0; // Parámetros para la transferencia a los motores.
+  float mR = 5.8115, mL = 5.8010, nR = 0.3985, nL = 0.5209; // Parámetros para la transferencia a los motores.
   float motorPowerRight = 15, motorPowerLeft = 15;  // Potencia de cada motor.
 
   // Calculamos la velocidad angular de cada rueda.
