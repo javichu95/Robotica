@@ -51,28 +51,46 @@ int setSpeed(float v, float w)
   while (true){       // Bucle infinito que va actualizando.
 
     timeAux=nPgmTime;
-    // Se leen los tacómetros y se estima cuantos mm se ha movido cada rueda.
-    float theta = robot_odometry -> th + w*incTiempo;
-    float x = v*incTiempo * cos(w*incTiempo + theta/2);
-    float y = v*incTiempo * sin(w*incTiempo + theta/2);
+    hogCPU();     // Se bloquea la CPU.
+    // Se leen los tacómetros.
+    float ruedaDer = nMotorEncoder[motorB];
+    float ruedaIzq = nMotorEncoder[motorC];
+    releaseCPU();     // Se libera la CPU.
+
+    AcquireMutex();     // Se bloquea con el semáforo.
+    // Se calculan los parámetros.
+    dSl = ;     // Aumento rueda izquierda.
+    dSr = ;     // Aumento rueda derecha.
+    dx = dS * cos(incTheta + incTheta/2);      // Aumento coordenada x.
+    dy = dS * sin(incTheta + incTheta/2);;      // Aumento coordenada y.
+    float theta = (robot_odometry -> th) + incTheta;
+    float x = (robot_odometry -> x) + dx;
+    float y = (robot_odometry -> y) + dy;
 
     set_position(robot_odometry, x, y, theta);
     // RESET tachometer right after to start including the "moved" degrees turned in next iteration
     nMotorEncoder[motorC] = 0;
     nMotorEncoder[motorB] = 0;
+    ReleaseMutex();     // Se librea con el semáforo.
 
-    // Mostrar cada paso en la pantalla y escribirlo en un fichero.
-		nxtDisplayTextLine(2, "ODOMETRY NEW VALUE");
-    nxtDisplayTextLine(3, "x,y: %2.2f %2.2f", robot_odometry.x,robot_odometry.y);
+    // Mostrar cada paso en la pantalla.
+    nxtDisplayTextLine(2, "ODOMETRY NEW VALUE");
+    nxtDisplayTextLine(3, "x,y: %2.2f %2.2f", robot_odometry.x, robot_odometry.y);
     nxtDisplayTextLine(4, "theta: %2.2f ", robot_odometry.th);
-	  // Escribir en fichero.
 
+    // Parámetros para escribir en el fichero.
+    string sFileName = "odometria.txt";     // Nombre del fichero.
+    string sString;     // Variable para guardar el string.
+    TFileIOResult nIoResult;
+    TFileHandle hFileHandle;
+    int nFileSize = 200; //1 byte each char...
+    
+    // Se escribe en el fichero.
+    StringFormat(sString, "%2.2f %2.2f %2.2f \n", x, y, theta);
+    WriteText(hFileHandle, nIoResult, sString);
 
-
-
-
-	 // Esperar hasta completar el ciclo.
-	 // ...
+    // Esperar hasta completar el ciclo.
+    wait1Msec(cycle-(nPgmTime-timeAux));
 
   }
 
