@@ -42,9 +42,16 @@ int setSpeed(float v, float w)
   return 0;
 }
 
+/*
+ * Función que obtiene las velocidades linear y angular del robot.
+ */
+ void readSpeed(float &v, float &w) {
+	 
+ }
+
 // Función que va actualizando la odometría para saber en todo momento donde
 // está el robot.
-/*task updateOdometry(){
+task updateOdometry(){
   int cycle = ??? ; // Número de ciclos para actualizar odometría.
   float dSl,dSr,dx,dy, dT;    // Variables para la odometría.
 
@@ -96,7 +103,18 @@ int setSpeed(float v, float w)
 
   }
 
-}*/
+}
+
+/*
+ * Función que lee la posición del robot.
+ */
+void readOdometry(float &x, float &y, float &theta) {
+	AcquireMutex();
+	x = robot_odometry -> x;
+	y = robot_odometry -> y;
+	theta = robot_odometry -> theta;
+	ReleaseMutex();
+}
 
 
 // Programa principal que realiza la trayectoria asignando velocidades a las ruedas.
@@ -117,7 +135,7 @@ task main()
   // Valores de odometría a 0.
 
   // Se inicializa la tarea de actualizar odometría.
-
+	startTask(updateOdometry);
   // Se establecen la velocidad lineal y angular.
 	//setSpeed(100,0);
 	//wait1Msec(4000);
