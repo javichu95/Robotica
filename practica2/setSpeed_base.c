@@ -14,13 +14,12 @@ TPosition robot_odometry;       // Posición para odometría.
 TMutex semaphore_odometry = 0;  // Semáforo para odometría.
 
 
-// Función que calcula la velocidad de cada rueda y se le asigna a los motores.
-int setSpeed(float v, float w)
-{
+/*
+* Función que calcula la velocidad de cada rueda y se le asigna a los motores.
+*/
+int setSpeed(float v, float w){
 
-// start the motors so that the robot gets v mm/s linear speed and w RADIAN/s angular speed
-
-  float w_l =1, w_r=1;  // Velocidad angular de cada rueda.
+  float w_l = 1, w_r = 1;  // Velocidad angular de cada rueda.
   float mR = 5.81155692, mL = 5.80103454, nR = 0.3985, nL = 0.5209; // Parámetros para la transferencia a los motores.
   float motorPowerRight = 0.0, motorPowerLeft = 0.0;  // Potencia de cada motor.
 
@@ -35,23 +34,25 @@ int setSpeed(float v, float w)
 	// Se asigna la potencia al motor.
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
-	//motor[motorA] = 10;
-
-	//wait1Msec(4000);     // Se asigna un tiempo de espera.
 
   return 0;
+
 }
 
 /*
- * Función que obtiene las velocidades linear y angular del robot.
- */
- void readSpeed(float &v, float &w) {
+* Función que obtiene las velocidades linear y angular del robot.
+*/
+void readSpeed(float &v, float &w) {
 	 
- }
 
-// Función que va actualizando la odometría para saber en todo momento donde
-// está el robot.
+}
+
+/*
+* Función que va actualizando la odometría para saber en todo momento donde
+* está el robot.
+*/
 task updateOdometry(){
+
   int cycle = ??? ; // Número de ciclos para actualizar odometría.
   float dSl,dSr,dx,dy, dT;    // Variables para la odometría.
 
@@ -77,7 +78,7 @@ task updateOdometry(){
     float y = (robot_odometry -> y) + dy;
 
     set_position(robot_odometry, x, y, theta);
-    // RESET tachometer right after to start including the "moved" degrees turned in next iteration
+
     nMotorEncoder[motorC] = 0;
     nMotorEncoder[motorB] = 0;
     ReleaseMutex();     // Se librea con el semáforo.
@@ -106,29 +107,29 @@ task updateOdometry(){
 }
 
 /*
- * Función que lee la posición del robot.
- */
+* Función que lee la posición del robot.
+*/
 void readOdometry(float &x, float &y, float &theta) {
-	AcquireMutex();
+
+	AcquireMutex();        // Se bloquea en el semáforo.
+  // Se leen las variables.
 	x = robot_odometry -> x;
 	y = robot_odometry -> y;
 	theta = robot_odometry -> theta;
-	ReleaseMutex();
+	ReleaseMutex();      // Se desbloquea el semáforo.
+
 }
 
 
-// Programa principal que realiza la trayectoria asignando velocidades a las ruedas.
+/*
+* Programa principal que realiza la trayectoria asignando velocidades a las ruedas.
+*/
 task main()
 {
-	float pi = 3.14159265;
-  float v = 0, w = 0; // Velocidades lineal y angular.
-  float radio; 					// Radio de la trayectoria.
- // int circunf;					 // L (semi-dist. between robot wheels)
+	float pi = 3.14159265;     // Valor de pi.
+  float v = 0.0, w = 0.0;       // Velocidades lineal y angular.
+  float radio; 				     	// Radio de la trayectoria.
 
-  // Configuración
-
-
-  // Resetear valores de odometría y encoders de motores.
   // Encoders a 0.
 	nMotorEncoder[motorB] = 0;
 	nMotorEncoder[motorC] = 0;
@@ -140,45 +141,35 @@ task main()
 	//setSpeed(100,0);
 	//wait1Msec(4000);
 
-	//Trayectoria 8 a partir de aqui.
+	// TRAYECTORIA EN 8.
 
   // Se gira el robot 90º.
-	w = -pi/2;
-	setSpeed(v,w);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec((-pi/2.0/w)*1000);	//Se espera a que el robot gire -90 grados.
-	setSpeed(0,0);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec(2000);
+	w = -pi/2.0;
+	setSpeed(v,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
+	wait1Msec((-pi/2.0/w)*1000);	// Se espera a que el robot gire -90 grados.
 
   // Se genera la primera parte de la trayectoria.
-
 	radio = 400.0;
-	v = 150.0;
-	w = v/radio;			//Se calcula la velocidad angular.
-	setSpeed(v,w);
-	wait1Msec((pi/w)*1000.0);		//Se espera el tiempo que tardara en girar 180 grados.
-	setSpeed(0,0);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec(2000);
+	v = 200.0;
+	w = v/radio;			// Se calcula la velocidad angular.
+	setSpeed(v,w);   // Se fijan las velocidades.
+	wait1Msec((pi/w)*1000.0);		// Se espera el tiempo que tardará en girar 180 grados.
 
   // Se genera la segunda parte de la trayectoria.
-	w = -w;		//Se cambia la dircción del giro.
-	setSpeed(v,w);
-	wait1Msec((-2.0*pi/w)*1000.0);//Se espera el tiempo que tardara el robot en girar 360 grados.
-	setSpeed(0.0,0.0);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec(2000);
+	w = -w;		// Se cambia la dirección del giro.
+	setSpeed(v,w);   // Se fijan las velocidades.
+	wait1Msec((-2.0*pi/w)*1000.0); // Se espera el tiempo que tardará el robot en girar 360 grados.
 
 
   // Se genera la tercera parte de la trayectoria.
-	w = -w; //Se vuelve a cambiar la direccion de giro.
-	setSpeed(v,w);
-	wait1Msec((pi/w)*1000.0);	//Se espera el tiempo que tardara el robot en girar 180 grados.
-	setSpeed(0,0);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec(2000);
+	w = -w;    // Se vuelve a cambiar la direccion de giro.
+	setSpeed(v,w);     // Se fijan las velocidades.
+	wait1Msec((pi/w)*1000.0);	// Se espera el tiempo que tardara el robot en girar 180 grados.
 
   // Se genera la cuarta parte de la trayectoria.
-	w = pi/2;
-	v = 0;
-	setSpeed(v,w);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec((pi/2.0/w)*1000.0);	//Se espera a que el robot gire 90 grados.
-	setSpeed(0,0);	//Velocidad lineal a 0 para que el robot gire sobre si mismo.
-	wait1Msec(2000);
+	w = pi/2.0;      // Se establecen los valores para velocidad angular y lineal.
+	v = 0.0;
+	setSpeed(v,w);	// Se fijan las velocidades.
+	wait1Msec((pi/2.0/w)*1000.0);	// Se espera a que el robot gire 90 grados.
+
 }
