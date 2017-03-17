@@ -25,7 +25,7 @@ TMutex semaphore_odometry = 0;  // Sem√°foro para odometr√≠a.
 void readOdometry(float &x, float &y, float &theta) {
 
 	AcquireMutex(semaphore_odometry);        // Se bloquea en el sem√°foro.
-  // Se leen las variables.
+ 	// Se leen las variables.
 	x = robot_odometry.x;
 	y = robot_odometry.y;
 	theta = robot_odometry.th;
@@ -52,13 +52,12 @@ int setSpeed(float v, float w){
 
 	// Se asigna la potencia al motor.
   hogCPU();
-	motor[motorB] = motorPowerRight;
+  	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
 	nxtDisplayTextLine(2, "POTENCIAS");
     nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
     nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
 	releaseCPU();
-
 
   return 0;
 
@@ -67,15 +66,13 @@ int setSpeed(float v, float w){
 /*
  * Normaliza un angulo entre -pi y pi.
  */
-float normalizarAngulo(float angulo) {
+float normalizarAngulo(float angulo, float min, float max) {
 
-	while(angulo <= -numPi){
-		angulo = angulo + 2*numPi;
+	if(val >= min){		// Si es mayor que el mÌnimo...
+		return min + (val - min) % (max - min);
+	} else{
+		return max - (min - val) % (max - min);
 	}
-	while(angulo > numPi){
-		angulo = angulo - 2*numPi;
-	}
-	return angulo;
 }
 
 /*
@@ -115,7 +112,7 @@ task updateOdometry(){
     dy = dS * sin(theta + incTheta/2.0);      // Aumento coordenada y.
 
     theta = theta + incTheta;						// Aumento del ·ngulo.
-    //theta = normalizarAngulo(theta);
+    theta = normalizarAngulo(theta);
     x = x + dx;
     y = y + dy;
 
@@ -145,8 +142,6 @@ task updateOdometry(){
   }
 
 }
-
-
 
 /*
  * Comprueba que un valor se encuentre entre un rango de valores.
