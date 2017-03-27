@@ -44,7 +44,7 @@ TMutex semaphore_odometry = 0;  // SemÃ¡foro para odometrÃ­a.
 void readOdometry(float &x, float &y, float &theta) {
 
 	AcquireMutex(semaphore_odometry);        // Se bloquea en el semÃ¡foro.
-  // Se leen las variables.
+  	// Se leen las variables.
 	x = robot_odometry.x;
 	y = robot_odometry.y;
 	theta = robot_odometry.th;
@@ -57,20 +57,20 @@ void readOdometry(float &x, float &y, float &theta) {
 */
 int setSpeed(float v, float w){
 
-  float w_l = 0.0, w_r = 0.0;  // Velocidad angular de cada rueda.
-  float mR = 5.81155692, mL = 5.80103454, nR = 0.3985, nL = 0.5209; // ParÃ¡metros para la transferencia a los motores.
-  float motorPowerRight = 0.0, motorPowerLeft = 0.0;  // Potencia de cada motor.
+	float w_l = 0.0, w_r = 0.0;  // Velocidad angular de cada rueda.
+	float mR = 5.81155692, mL = 5.80103454, nR = 0.3985, nL = 0.5209; // ParÃ¡metros para la transferencia a los motores.
+  	float motorPowerRight = 0.0, motorPowerLeft = 0.0;  // Potencia de cada motor.
 
-  // Calculamos la velocidad angular de cada rueda.
-  w_r = v/R + w*L/(2.0*R);
-  w_l = v/R - w*L/(2.0*R);
+  	// Calculamos la velocidad angular de cada rueda.
+  	w_r = v/R + w*L/(2.0*R);
+  	w_l = v/R - w*L/(2.0*R);
 
-  // Se calcula la potencia del motor.
-  motorPowerLeft = mL*w_l + nL;
-  motorPowerRight = mR*w_r + nR;
+  	// Se calcula la potencia del motor.
+  	motorPowerLeft = mL*w_l + nL;
+  	motorPowerRight = mR*w_r + nR;
 
 	// Se asigna la potencia al motor.
-  hogCPU();
+  	hogCPU();
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
 	nxtDisplayTextLine(2, "POTENCIAS");
@@ -79,7 +79,7 @@ int setSpeed(float v, float w){
 	releaseCPU();
 
 
-  return 0;
+  	return 0;
 
 }
 
@@ -173,7 +173,7 @@ task updateOdometry(){
 bool compareValor(float actual, float objetivo, bool menor) {
 
 	float eps = 0.15;
-	if(actual >= (objetivo - eps)	&& actual <= (objetivo + eps)) {
+	if(actual >= (objetivo - eps) && actual <= (objetivo + eps)) {
 		return true;
 	}
 	return false;
@@ -192,66 +192,75 @@ bool compareValor(float actual, float objetivo, bool menor) {
 }
 
 /*
- * Centra la pelota en la cámara.
+ * Método que centra la pelota en la cámara.
  */
 bool centrarPelota(int_array bl, int_array br, int_array bt, int_array bb) {
+
+	// Variables para calcular el error respecto al centro.
 	int x_centre, x_error;
 	int y_centre, y_error;
 	bool erased = false;
 
-		if (!erased) {
+		if (!erased) {		
 			nxtDisplayTextLine(0,"Tracking ...");
 			erased = true;
 		}
 
-		// Find the centre of the blob using double resolution of camera
+		// Fija el centro del blop respecto a la cámara.
 		x_centre = bl[0] + br[0];
 		y_centre = bt[0] + bb[0];
 
-		// Compute the error from the desired position of the blob (using double resolution)
+		// Calcula el error del blop.
 		x_error = 176 - x_centre;
 		y_error = 143 - y_centre;
-		if(abs(x_error)  < 0.15) {
+
+		if(abs(x_error)  < 0.15) {	// Si es menor es que ya está centrada.
 			return true;
 		}
-		// Drive the motors proportional to the error
+
+		// Da velocidades al motor para centrarlo.
 		motor[l_motor] = (y_error - x_error) / 5;
 		motor[r_motor] = (y_error + x_error) / 5;
+
 		return false;
 }
 
-
+/*
+ * Método principal que centra al cobor y coge la pelota.
+ */
 task main (){
 
-	bool continueTracking = true;
-	int _nblobs = 0;
-  int_array bc, bl, bt, br, bb;
-  bool _condensed = true, encontrada = false;
-	//startTask(updateOdometry);
- 	// Initialise the camera
-	init_camera(cam);
+	bool continueTracking = true;		// Booleano para indicar si se sigue el tracking.
+	int _nblobs = 0;		// Número de blops detectados.
+  	int_array bc, bl, bt, br, bb;			// Variables para la detección de la cámara.
+  	bool encontrada = false;			// Booleano para indicar si se ha encontrado la pelota.
+	//startTask(updateOdometry);		// Se inicializa la odometría.
+	init_camera(cam);					// Se inicializa la cámara.			
 
-	while (continueTracking) {
+	while (continueTracking) {			// Mientras se deba continuar el tracking...
 
-		// Get the blobs from the camera into the array
+		// Se obtienen los blops.
 		get_blobs(cam, _nblobs, bc, bl, bt, br, bb);
 		nxtDisplayTextLine(1, "%d", _nblobs);
-		for (int i = 0; i < _nblobs; i++) {
+
+		for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 		    if (bc[i] == GOAL_COLOR){		// Si el color coincide...
 				encontrada = true;
-		}
-}		if(!encontrada){		// Si no encuentra la pelota, da vueltas.
-			setSpeed(0,1.4);		// Se fija la velocidad angular para dar vueltas.
-			wait1Msec(1000);
-			setSpeed(0,0);
-		} else{
-			if(centrarPelota(bl, br, bt, bb)) {
+			}
+		}		
+
+		if(!encontrada){		// Si no encuentra la pelota, da vueltas.
+			setSpeed(0,numPi/2);		// Se fija la velocidad angular para dar vueltas.
+			wait1Msec(1000);			// Se espera un tiempo.
+			setSpeed(0,0);			// Se para el robot.
+		} else{			// Si la ha encontrado...
+			if(centrarPelota(bl, br, bt, bb)) {		// Se centra al robot.
 				continueTracking = false;
 			}
-			setSpeed(0,0);
-			// Ajustar lineal y angular para llegar.
+			setSpeed(0,0);			// Se para al robot.
 		}
 	}
+
 	// LÃ­mite en encoder.
 
 	// Aplicar velocidad hasta cerrar la garra (== encoder).
