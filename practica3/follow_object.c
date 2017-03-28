@@ -91,7 +91,7 @@ task main (){
   	int_array bc, bl, bt, br, bb;			// Variables para la detección de la cámara.
   	bool encontrada = false;			// Booleano para indicar si se ha encontrado la pelota.
 	init_camera(cam);					// Se inicializa la cámara.
-	float areaMayor = 0;
+	float areaMayor = 0.0;
 	int blopMayor = 0;
 	//bool haCentrado = false;
 	while (continueTracking) {			// Mientras se deba continuar el tracking...
