@@ -37,7 +37,15 @@ float normalizarAngulo(float angulo);
 */
 task updateOdometry();
 
+/*
+ * Abre la pinza del robot.
+ */
+ void abrirPinza();
 
+/*
+ * Cierra la pinza del robot.
+ */
+ void cerrarPinza();
 
 /*
  * Comprueba que un valor se encuentre entre un rango de valores.
