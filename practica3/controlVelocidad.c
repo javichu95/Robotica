@@ -152,6 +152,15 @@ task updateOdometry(){
 	motor[motorA] = presionPinza;		//Una vez cerrada sigue ejerciendo algo de presion.
 	releaseCPU();
  }
+ 
+  /*
+  * Deja de ejercer presion con la pinza.
+  */
+ void aflojarPinza() {
+	hogCPU();
+	motor[motorA] = 0.0;
+	releaseCPU();
+ }
 
 /*
  * Comprueba que un valor se encuentre entre un rango de valores.
@@ -164,3 +173,5 @@ bool compareValor(float actual, float objetivo, bool menor) {
 	}
 	return false;
 }
+
+

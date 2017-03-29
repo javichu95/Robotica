@@ -1,3 +1,6 @@
+#ifndef CONTROLVELOCIDAD_H
+#define CONTROLVELOCIDAD_H
+
 #include "mutexLib.c"
 #include "positionLib.c"
 
@@ -46,8 +49,15 @@ task updateOdometry();
  * Cierra la pinza del robot.
  */
  void cerrarPinza();
+ 
+ /*
+  * Deja de ejercer presion con la pinza.
+  */
+ void aflojarPinza();
 
 /*
  * Comprueba que un valor se encuentre entre un rango de valores.
  */
 bool compareValor(float actual, float objetivo, bool menor);
+
+#endif
