@@ -234,8 +234,12 @@ float centroPelota(int_array bl, int_array br, int_array bt, int_array bb, int i
 /*
  * Mueve el robot para buscar la pelota.
  */
-void buscar() {
-	setSpeed(0,numPi);		// Se fija la velocidad angular para dar vueltas.
+void buscar(bool derecha) {
+	if(derecha) {
+		setSpeed(0,-numPi);		// Se fija la velocidad angular para dar vueltas.
+	} else {
+		setSpeed(0,numPi);		// Se fija la velocidad angular para dar vueltas.
+	}
 }
 
 /*
@@ -265,46 +269,49 @@ task main (){
 
 	bool continueTracking = true;		// Booleano para indicar si se sigue el tracking.
 	int _nblobs = 0;		// Número de blops detectados.
-  int_array bc, bl, bt, br, bb;			// Variables para la detección de la cámara.
-  bool encontrada = false;			// Booleano para indicar si se ha encontrado la pelota.
+	int_array bc, bl, bt, br, bb;			// Variables para la detección de la cámara.
+	bool encontrada = false;			// Booleano para indicar si se ha encontrado la pelota.
 	init_camera(cam);					// Se inicializa la cámara.
 	float areaMayor = 0.0;
 	int blopMayor = 0;
+	int lastBloopIzq = 0;
+	
 	while (continueTracking) {			// Mientras se deba continuar el tracking...
 
-	// Se obtienen los blops.
-	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);
-	nxtDisplayTextLine(1, "%d", _nblobs);
+		// Se obtienen los blops.
+		get_blobs(cam, _nblobs, bc, bl, bt, br, bb);
+		nxtDisplayTextLine(1, "%d", _nblobs);
 
-	for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
+		for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 
-		if (bc[i] == GOAL_COLOR){			// Si el color coincide...
-			nxtDisplayTextLine(0,"vistoooo");
-			encontrada = true;
-			float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-			if(area > areaMayor) {
-				areaMayor = area;
-				blopMayor = i;
+			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
+				nxtDisplayTextLine(0,"vistoooo");
+				encontrada = true;
+				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
+				if(area > areaMayor) {
+					areaMayor = area;
+					blopMayor = i;
+					int lastBloopIzq = bl[i];
+				}
+
 			}
 
 		}
 
+		nxtDisplayTextLine(6,"%.2f",areaMayor);
+		if(!encontrada){		// Si no encuentra la pelota, la busca.
+			buscar(lastBloopIzq > 176);
+		}else{			// Si la ha encontrado...
+				float error = centroPelota(bl, br, bt, bb, blopMayor);	//Centra la pelota.
+				nxtDisplayTextLine(7,"%.2f",error);
+				float angular = error*0.002;
+				if(atraparPelota(areaMayor,angular)) {	//Avanza para coger la pelota.
+					//QUIZA DEBAMOS HACER UNA COMPROBACION O ALGO
+					continueTracking = false;		//Si ha atrapado la pelota finaliza.
+				}
+				encontrada = false;
+		}
 	}
-
-	nxtDisplayTextLine(6,"%.2f",areaMayor);
-	if(!encontrada){		// Si no encuentra la pelota, la busca.
-		buscar();
-	}else{			// Si la ha encontrado...
-			float error = centroPelota(bl, br, bt, bb, blopMayor);	//Centra la pelota.
-			nxtDisplayTextLine(7,"%.2f",error);
-			float angular = error*0.002;
-			if(atraparPelota(areaMayor,angular)) {	//Avanza para coger la pelota.
-				//QUIZA DEBAMOS HACER UNA COMPROBACION O ALGO
-				continueTracking = false;		//Si ha atrapado la pelota finaliza.
-			}
-			encontrada = false;
-	}
-}
 	aflojarPinza();
 	wait1MSec(5000);
 	abrirPinza();
