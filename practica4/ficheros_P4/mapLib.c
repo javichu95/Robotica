@@ -2,7 +2,7 @@
 
 #include "positionLib.c"
 
-// variables globales de las dimensiones del mapa
+// Variables globales de las dimensiones del mapa
 int sizeX;
 int sizeY;
 int sizeCell;
@@ -19,12 +19,16 @@ int pathY[MAX_X*MAX_Y];
 
 int grid[MAX_X*2][MAX_Y*2];
 
+/*
+ * Inicializa todas las conexiones a falso.
+ */
 void initConnections(){
-     for(int i=0; i<2*MAX_X+1; ++i){
-        for (int j=0; j<2*MAX_Y+1; ++j){
-          connectionsMatrix[i][j]=false;
-        }
-     }
+
+  for(int i=0; i<2*MAX_X+1; ++i){
+    for (int j=0; j<2*MAX_Y+1; ++j){
+      connectionsMatrix[i][j]=false;
+    }
+  }
 
 }
 
@@ -45,6 +49,9 @@ void cell2connCoord(int cellX, int cellY, int numNeigh, int & connX, int & connY
   }
 }
 
+/*
+ * Marca una cierta celda como conectada a otra.
+ */
 void setConnection(int cellX, int cellY, int numNeigh){
   int connX, connY; // coordinates in the connection matrix
   // from coordinates in the grid of cells to coordinates in the connection matrix
@@ -52,6 +59,9 @@ void setConnection(int cellX, int cellY, int numNeigh){
   connectionsMatrix[connX][connY]=true;
 }
 
+/*
+ * Borra la conexión entre dos celdas.
+ */
 void deleteConnection(int cellX, int cellY, int numNeigh){
   int connX, connY; // coordinates in the connection matrix
   // from coordinates in the grid of cells to coordinates in the connection matrix
@@ -59,6 +69,9 @@ void deleteConnection(int cellX, int cellY, int numNeigh){
   connectionsMatrix[connX][connY]=false;
 }
 
+/*
+ * Devuelve true si y sólo si dos celdas dadas están conectadas.
+ */
 bool isConnected(int cellX, int cellY, int numNeigh){
    int connX, connY; // coordinates in the connection matrix
   // from coordinates in the grid of cells to coordinates in the connection matrix
@@ -68,8 +81,7 @@ bool isConnected(int cellX, int cellY, int numNeigh){
 }
 
 
-bool readLineHeader(TFileHandle hFileHandle,TFileIOResult nIoResult, int & dimX, int & dimY, int &dimCell)
-{
+bool readLineHeader(TFileHandle hFileHandle,TFileIOResult nIoResult, int & dimX, int & dimY, int &dimCell){
     //unsigned ans;
     //short ans;
     int ind = 1;
@@ -133,11 +145,7 @@ bool readLineHeader(TFileHandle hFileHandle,TFileIOResult nIoResult, int & dimX,
      wait10Msec(300);*/
 
      return endfile;
-	}
-
-
-
-
+}
 
 bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRow)
 {
@@ -265,10 +273,9 @@ bool loadMap(string mapFileName)
 	   return loadingOk;
 }
 
-
-// DRAW map and robot
-
-
+/*
+ * Método que dibuja el mapa por pantalla.
+ */
 void drawMap(){
   int i,j,cx,cy;
 
@@ -309,7 +316,10 @@ void drawMap(){
 
 }
 
-/* Convert from robot odometry coordinates (in mm) to cell coordinates */
+/*
+ * Método que convierte las coordenadas del robot en odometría en coordenadas
+ * de la celda.
+ */
 void pos2cell(float x_mm, float y_mm, int & x_cell, int & y_cell){
 
   x_cell =  (int) x_mm/sizeCell;
@@ -318,6 +328,9 @@ void pos2cell(float x_mm, float y_mm, int & x_cell, int & y_cell){
 
 }
 
+/*
+ * Método que dibuja el robot en la pantalla.
+ */
 void drawRobot(float x_mm, float y_mm, float ang_rad){
   int cellx,celly;
   int pixX,pixY;
@@ -336,7 +349,7 @@ void drawRobot(float x_mm, float y_mm, float ang_rad){
   th=(ang_grad+22.5)/45;
   while(th>7){th=th-8;}
 
-	//paint orientation
+	// Pinta la orientación.
 	if(th==0)		    { nxtDrawLine(pixX,pixY,pixX+2,pixY);		}
 	else if(th==1)	{ nxtDrawLine(pixX,pixY,pixX+2,pixY+2);	}
 	else if(th==2)	{ nxtDrawLine(pixX,pixY,pixX,pixY+2);	  }
@@ -348,54 +361,71 @@ void drawRobot(float x_mm, float y_mm, float ang_rad){
 
 }
 
-/* FUNCIONES A IMPLEMENTAR */
-
+/*
+ * Método que va asignando costes recursivamente.
+ */
 void planPath(int coordenadaX, int coordenadaY, int coste) {
-		if(grid[coordenadaX+1][coordenadaY] != -1 && coordenadaX+2 <= 2*sizeX) {
-			if(grid[coordenadaX+2][coordenadaY]	< -1 || grid[coordenadaX+2][coordenadaY] > coste) {
-				grid[coordenadaX+2][coordenadaY] = coste;
-				planPath(coordenadaX+2,coordenadaY, coste+1);
-			}
-		}
 
-		if(grid[coordenadaX-1][coordenadaY] != -1 && coordenadaX-2 >= 0) {
-			if(grid[coordenadaX-2][coordenadaY]	< -1 || grid[coordenadaX-2][coordenadaY] > coste) {
-				grid[coordenadaX-2][coordenadaY] = coste;
-				planPath(coordenadaX-2,coordenadaY, coste+1);
-			}
+  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
+  if(grid[coordenadaX+1][coordenadaY] != -1 && coordenadaX+2 <= 2*sizeX) {
+		if(grid[coordenadaX+2][coordenadaY]	< -1 || grid[coordenadaX+2][coordenadaY] > coste) {
+      // Asigna el coste y realiza la llamada recursiva.
+			grid[coordenadaX+2][coordenadaY] = coste;
+			planPath(coordenadaX+2,coordenadaY, coste+1);
 		}
+	}
 
-		if(grid[coordenadaX][coordenadaY+1] != -1 && coordenadaY+2 <= 2*sizeY) {
-			if(grid[coordenadaX][coordenadaY+2]	< -1 || grid[coordenadaX][coordenadaY+2] > coste) {
-				grid[coordenadaX][coordenadaY+2] = coste;
-				planPath(coordenadaX,coordenadaY+2, coste+1);
-			}
+  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
+	if(grid[coordenadaX-1][coordenadaY] != -1 && coordenadaX-2 >= 0) {
+		if(grid[coordenadaX-2][coordenadaY]	< -1 || grid[coordenadaX-2][coordenadaY] > coste) {
+      // Asigna el coste y realiza la llamada recursiva.
+			grid[coordenadaX-2][coordenadaY] = coste;
+			planPath(coordenadaX-2,coordenadaY, coste+1);
 		}
+	}
 
-		if(grid[coordenadaX][coordenadaY-1] != -1 && coordenadaY-2 >= 0) {
-			if(grid[coordenadaX][coordenadaY-2]	< -1 || grid[coordenadaX][coordenadaY-2] > coste) {
-				grid[coordenadaX][coordenadaY-2] = coste;
-				planPath(coordenadaX,coordenadaY-2, coste+1);
-			}
+  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
+	if(grid[coordenadaX][coordenadaY+1] != -1 && coordenadaY+2 <= 2*sizeY) {
+		if(grid[coordenadaX][coordenadaY+2]	< -1 || grid[coordenadaX][coordenadaY+2] > coste) {
+      // Asigna el coste y realiza la llamada recursiva.
+			grid[coordenadaX][coordenadaY+2] = coste;
+			planPath(coordenadaX,coordenadaY+2, coste+1);
 		}
-}
+	}
 
-void planPath(int x_ini, int y_ini, int x_end, int y_end){
-	grid[x_end][y_end] = 0;
-	planPath(x_end, y_end, 1);
+  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
+	if(grid[coordenadaX][coordenadaY-1] != -1 && coordenadaY-2 >= 0) {
+		if(grid[coordenadaX][coordenadaY-2]	< -1 || grid[coordenadaX][coordenadaY-2] > coste) {
+      // Asigna el coste y realiza la llamada recursiva.
+			grid[coordenadaX][coordenadaY-2] = coste;
+			planPath(coordenadaX,coordenadaY-2, coste+1);
+		}
+	}
+
 }
 
 /*
- * Asigna valor -1 a obstaculos.
+ * Método que inicializa el algoritmo NF1 para ir dando valores.
+ */
+void planPath(int x_ini, int y_ini, int x_end, int y_end){
+
+	grid[x_end][y_end] = 0;
+	planPath(x_end, y_end, 1);
+
+}
+
+/*
+ * Método que asigna el valor -1 a obstaculos.
  */
 void asignarValores() {
-   for(int i = 0; i <= 2*sizeX; i++){
+
+  for(int i = 0; i <= 2*sizeX; i++){
 		for(int j = 0; j <= 2*sizeY; j++){
 			if(!connectionsMatrix[i][j]) {
-					grid[i][j] = -1;
-			}
+				grid[i][j] = -1;
 		}
 	}
+
 }
 
 /*
@@ -408,6 +438,7 @@ void iniciarGrid(){
 			grid[i][j] = -2;
 		}
 	}
+
 }
 
 /*
@@ -417,7 +448,10 @@ void encontrarCamino(){
 
 }
 
-// go from CURRENT position (odometry) to (middle??) of cell (cellX, cellY)
+/*
+* Método que planifica el camino desde la posición actual hasta una celda
+* dada.
+*/
 void go(int cellX, int cellY){
 
 

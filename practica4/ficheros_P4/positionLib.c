@@ -3,13 +3,18 @@
 #define INI_Y 0
 #define INI_TH 0
 
+/*
+ * Estructura con la posición.
+ */
 typedef struct {
      float x;   //x coordinate
      float y;   //y coordinate
      float th;  //theta - orientation RADIANES
 }TPosition;
 
-
+/*
+ * Método que fija la posición.
+ */
 void set_position(TPosition &pos, float x, float y, float th)
 {
   pos.x=x;
@@ -18,6 +23,9 @@ void set_position(TPosition &pos, float x, float y, float th)
 
 }
 
+/*
+ * Método que normaliza el ángulo entre [-PI,PI].
+ */
 void normalizeAngle(float & angle){
 // normalize angle in radians between PI and -PI
 
