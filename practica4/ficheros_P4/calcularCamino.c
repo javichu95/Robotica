@@ -1,47 +1,37 @@
-#include "mapLib.c"
+#pragma config(Sensor, S1, 	sonar,          sensorSONAR)
 
-string cuadricula = "grid.txt";     // Nombre del fichero.
-TFileIOResult nIoCuadricula;
-TFileHandle hFileHandleCuad = 0;
-short nFileSizeCuad = 20000;			// Tama??el fichero.
+#include "mapLib.c"
 
 task main()
 {
+	//while(true) {
+	/*int distance_in_cm = 31;   // Create variable 'distance_in_cm' and initialize it to 20(cm).
+
+   while(SensorValue[sonar] > distance_in_cm)   // While the Sonar Sensor readings are less than the specified, 'distance_in_cm':
+   {
+      setSpeed(150,0);
+   }
+   setSpeed(0,numPi/2);
+   wait1Msec(1000);
+   motor[motorB] = 0;    // Motor B is stopped at a 0 power level
+   motor[motorC] = 0;    // Motor C is stopped at a 0 power level
+		nxtDisplayTextLine(1, "%d", SensorValue[sonar]);
+	}*/
+
 	int x,y;
 	float th;
 	string map_file = "mapa2.txt";
+
+	// Se inicializa la odometría.
+	set_position(robot_odometry, INI_X, INI_Y, INI_TH);
 	initConnections();
 
 	loadMap(map_file);
 
-	iniciarGrid();
-	asignarValores();
-
-	planPath(1,1,5,3);
+	planPath(1,1,5,5);
 
 	encontrarCamino(1,1);
 
-	OpenWrite(hFileHandleCuad, nIoCuadricula, cuadricula, nFileSizeCuad);
-
-	string sString;
-	for(int i = 2*sizeY; i >= 0; i--) {
-		for(int j = 0; j <= 2*sizeX; j++) {
-			stringFormat(sString, "%d ", grid[j][i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-		}
-    WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-	}
-
-	for(int j = 0; j <= 20; j++) {
-		stringFormat(sString, "%d ", pathX[j]);
-    WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}
-   WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-
-   for(int i = 0; i <= 20; i++) {
-    	stringFormat(sString, "%d ", pathY[i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}
 	startTask(updateOdometry);
 	recorrerCamino();
 	stopTask(updateOdometry);

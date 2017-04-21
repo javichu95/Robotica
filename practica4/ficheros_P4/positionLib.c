@@ -1,7 +1,7 @@
 // GLOBAL VARIABLE FOR ODOMETRY
 #define INI_X 0
 #define INI_Y 0
-#define INI_TH 0
+#define INI_TH PI/2
 
 /*
  * Estructura con la posición.
