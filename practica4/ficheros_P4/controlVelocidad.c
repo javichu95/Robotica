@@ -32,31 +32,17 @@ int setSpeed(float v, float w){
   motorPowerRight = mR*w_r + nR;
 
 	// Se asigna la potencia al motor.
-	hogCPU();
+	hogCPU();			// Se bloquea la CPU.
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
+	// Se muestran las velocidades por pantalla.
 	nxtDisplayTextLine(2, "POTENCIAS");
-    nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
-    nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
-	releaseCPU();
-
+  nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
+  nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
+	releaseCPU();			// Se libera la CPU.
 
   return 0;
 
-}
-
-/*
- * Normaliza un angulo entre -pi y pi.
- */
-float normalizarAngulo(float angulo) {
-
-	while(angulo <= -numPi){
-		angulo = angulo + 2*numPi;
-	}
-	while(angulo > numPi){
-		angulo = angulo - 2*numPi;
-	}
-	return angulo;
 }
 
 /*
@@ -67,21 +53,23 @@ task updateOdometry(){
 
   int cycle = 50; // Número de ciclos para actualizar odometría.
   float dSl = 0.0, dSr = 0.0, dx = 0.0, dy = 0.0, dS = 0.0;    // Variables para la odometría.
-	float timeAux = 0.0;
+	float timeAux = 0.0;		// Variable para el tiempo.
 	Delete(sFileName, nIoResult);		// Se borra el fichero si ya existe.
 	float x = 0.0, y = 0.0, theta = 0.0;	// Posicion del robot.
 	float ruedaDer = 0.0, ruedaIzq = 0.0; // Cuanto han girado las ruedas en cada ciclo.
 	float incTheta = 0.0; // Angulo que ha girado el robot en cada ciclo.
+
 	// Se abre el fichero.
 	OpenWrite(hFileHandle, nIoResult, sFileName, nFileSize);
 
 	while (true){       // Bucle infinito que va actualizando.
 
-    timeAux=nPgmTime;
+    timeAux=nPgmTime;		// Se lee el tiempo actual.
     hogCPU();     // Se bloquea la CPU.
     // Se leen los tacómetros.
     ruedaDer = nMotorEncoder[motorB];
     ruedaIzq = nMotorEncoder[motorC];
+    // Se ponen a 0 los tacómetros.
     nMotorEncoder[motorC] = 0.0;
     nMotorEncoder[motorB] = 0.0;
     releaseCPU();     // Se libera la CPU.
@@ -91,23 +79,19 @@ task updateOdometry(){
     dSr = 2*numPi*R*(ruedaDer/360.0);     // Aumento rueda derecha.
     dS = (dSl + dSr)/2.0;						// Cuanto ha avanzado el robot en el ciclo.
     incTheta = (dSr - dSl)/L;				// Angulo girado por el robot en el ciclo.
-    readOdometry(x,y,theta);			// Se lee la odometr?
+    readOdometry(x,y,theta);			// Se lee la odometría.
     dx = dS * cos(theta + incTheta/2.0);      // Aumento coordenada x.
     dy = dS * sin(theta + incTheta/2.0);      // Aumento coordenada y.
 
-    theta = theta + incTheta;						// Aumento del ?ulo.
-    theta = normalizarAngulo(theta);
+    theta = theta + incTheta;						// Aumento del ángulo.
+    theta = normalizarAngulo(theta);		// Se normaliza el ángulo.
+    // Aumento en el eje x e y.
     x = x + dx;
     y = y + dy;
 
     AcquireMutex(semaphore_odometry);     // Se bloquea con el semáforo.
-    set_position(robot_odometry, x, y, theta);		 // Se fija la posici??
+    set_position(robot_odometry, x, y, theta);		 // Se fija la posición.
     ReleaseMutex(semaphore_odometry);     // Se librea con el semáforo.
-
-    // Mostrar cada paso en la pantalla.
-    /*nxtDisplayTextLine(2, "ODOMETRY NEW VALUE");
-    nxtDisplayTextLine(3, "x,y: %2.2f %2.2f", robot_odometry.x, robot_odometry.y);
-    nxtDisplayTextLine(4, "theta: %2.2f ", robot_odometry.th);*/
 
     // Parámetros para escribir en el fichero.
     string sString;     // Variable para guardar el string.
@@ -128,48 +112,16 @@ task updateOdometry(){
 }
 
 /*
- * Abre la pinza del robot.
- */
- void abrirPinza() {
-	hogCPU();
-	motor[motorA] = -movPinza;	//Abre la pinza.
-	releaseCPU();
-	wait1Msec(500);
-	hogCPU();
-	motor[motorA] = 0;		//Tras un tiempo detiene el motor.
-	releaseCPU();
- }
-
-/*
- * Cierra la pinza del robot.
- */
- void cerrarPinza() {
-	hogCPU();
-	motor[motorA] = movPinza;		//Cierra la pinza.
-	releaseCPU();
-	wait1Msec(500);
-	hogCPU();
-	motor[motorA] = presionPinza;		//Una vez cerrada sigue ejerciendo algo de presion.
-	releaseCPU();
- }
-
-  /*
-  * Deja de ejercer presion con la pinza.
-  */
- void aflojarPinza() {
-	hogCPU();
-	motor[motorA] = 0.0;
-	releaseCPU();
- }
-
-/*
- * Comprueba que un valor se encuentre entre un rango de valores.
+ * Método que comprueba que un valor se encuentre entre un rango de valores.
  */
 bool compareValor(float actual, float objetivo, bool menor) {
 
-	float eps = 0.15;
+	float eps = 0.15;			// Valor epsilon.
+
+	// Se comprueba si está en el rango.
 	if(actual >= (objetivo - eps)	&& actual <= (objetivo + eps)) {
 		return true;
 	}
+
 	return false;
 }

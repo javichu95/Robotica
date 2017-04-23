@@ -1,10 +1,12 @@
-// GLOBAL VARIABLE FOR ODOMETRY
+// Variables globales para la odometría.
 #define INI_X 0
 #define INI_Y 0
 #define INI_TH PI/2
 
+float numPi = 3.14159265;     // Valor de numPi.
+
 /*
- * Estructura con la posiciÃ³n.
+ * Estructura con la posición.
  */
 typedef struct {
      float x;   //x coordinate
@@ -13,7 +15,7 @@ typedef struct {
 }TPosition;
 
 /*
- * MÃ©todo que fija la posiciÃ³n.
+ * Método que fija la posición.
  */
 void set_position(TPosition &pos, float x, float y, float th)
 {
@@ -24,18 +26,16 @@ void set_position(TPosition &pos, float x, float y, float th)
 }
 
 /*
- * MÃ©todo que normaliza el Ã¡ngulo entre [-PI,PI].
+ * Normaliza un angulo entre -pi y pi.
  */
-void normalizeAngle(float & angle){
-// normalize angle in radians between PI and -PI
+float normalizarAngulo(float angulo) {
 
-  while (angle>PI || angle<-PI){
-    if (angle>PI){
-      angle=angle-2*PI;
-    }
-    if (angle<-PI){
-      angle=angle+2*PI;
-    }
-  }
+	while(angulo <= -numPi){
+		angulo = angulo + 2*numPi;
+	}
+	while(angulo > numPi){
+		angulo = angulo - 2*numPi;
+	}
+	return angulo;
 
 }
