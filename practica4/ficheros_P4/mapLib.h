@@ -20,9 +20,14 @@ int sizeCell;		// Tamaño de la celda.
 int pixPerX;		// Píxeles por eje X.
 int pixPerY;		// Píxeles por eje Y.
 
-// Coordenadas de la celda final.
+// Coordenadas de la celda final e inicial.
 int celdaXFin;
 int celdaYFin;
+int celdaXIni;
+int celdaYIni;
+
+// Booleano para indicar que es el camino inicial.
+bool isPrimero = true;
 
 // Matriz de conexiones.
 bool connectionsMatrix[2*MAX_X+1][2*MAX_Y+1];

@@ -36,6 +36,7 @@ float normalizarAngulo(float angulo) {
 	while(angulo > numPi){
 		angulo = angulo - 2*numPi;
 	}
+
 	return angulo;
 
 }

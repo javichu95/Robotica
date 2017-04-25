@@ -452,9 +452,14 @@ void planPath(int x_ini, int y_ini, int x_end, int y_end){
 	iniciarGrid();			// Inicializa al cuadrícula.
 	asignarValores();		// Coloca los obstáculos.
 
-	// Se guarda la celda final.
-	celdaXFin = x_end;
-	celdaYFin = y_end;
+	// Se guarda la celda final e inicial.
+	if(isPrimero){
+		celdaXFin = x_end;
+		celdaYFin = y_end;
+		celdaXIni = x_ini;
+		celdaYIni = y_ini;
+		isPrimero = false;			// Se indica que ya no será la primera.
+	}
 
 	grid[x_end][y_end] = 0;			// Se asigna el valor 0 al objetivo.
 
@@ -601,8 +606,8 @@ bool detectObstacle(float theta){
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
 		// Se obtiene la celda en la que está el obstáculo.
-		int celdaX = redondearCoord(x) + pathX[0];
-		int celdaY = redondearCoord(y) + pathY[0];
+		int celdaX = redondearCoord(x) + celdaXIni;
+		int celdaY = redondearCoord(y) + celdaYIni;
 
 		// Se saca el vecino entre el que está el obstáculo
 		int  xconn = celdaX, yconn = celdaY;
@@ -643,8 +648,8 @@ bool go(int cellX, int cellY){
 	bool hayObstaculo = false;		// Booleano que indica si hay obstáculo.
 
 	// Se saca la celda en la que estamos.
-	int coordX = redondearCoord(x) + pathX[0];
-	int coordY = redondearCoord(y) + pathY[0];
+	int coordX = redondearCoord(x) + celdaXIni;
+	int coordY = redondearCoord(y) + celdaYIni;
 
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
 
@@ -726,7 +731,7 @@ void recorrerCamino(){
 
 		ind++;			// Se actualiza el índice.
 
-		if(grid[pathX[ind]][pathY[ind]] == 0){
+		if(grid[pathX[ind-1]][pathY[ind-1]] == 0){
 			seguir = false;
 		}
 
