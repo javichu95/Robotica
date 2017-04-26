@@ -28,7 +28,9 @@ task main()
 
 	loadMap(map_file);
 
-	planPath(1,1,5,5);
+	drawMap();
+
+	planPath(1,1,11,9);
 
 	encontrarCamino(1,1);
 

@@ -36,9 +36,9 @@ int setSpeed(float v, float w){
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
 	// Se muestran las velocidades por pantalla.
-	nxtDisplayTextLine(2, "POTENCIAS");
-  nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
-  nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
+	//nxtDisplayTextLine(2, "POTENCIAS");
+  //nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
+  //nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
 	releaseCPU();			// Se libera la CPU.
 
   return 0;
@@ -51,7 +51,7 @@ int setSpeed(float v, float w){
 */
 task updateOdometry(){
 
-  int cycle = 50; // Número de ciclos para actualizar odometría.
+  int cycle = 100; // Número de ciclos para actualizar odometría.
   float dSl = 0.0, dSr = 0.0, dx = 0.0, dy = 0.0, dS = 0.0;    // Variables para la odometría.
 	float timeAux = 0.0;		// Variable para el tiempo.
 	Delete(sFileName, nIoResult);		// Se borra el fichero si ya existe.

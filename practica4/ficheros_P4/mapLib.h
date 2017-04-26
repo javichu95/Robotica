@@ -10,7 +10,7 @@
 // Variables para dibujar la cuadrícula.
 TFileIOResult nIoCuadricula;
 TFileHandle hFileHandleCuad = 0;
-short nFileSizeCuad = 20000;			// Tamaño del fichero.
+short nFileSizeCuad = 2000;			// Tamaño del fichero.
 string cuadricula = "grid.txt";     // Nombre del fichero.
 
 // Variables globales de las dimensiones del mapa
@@ -151,6 +151,8 @@ bool go(int cellX, int cellY);
 * Método que recorre el camino hasta llegar al objetivo.
 */
 void recorrerCamino();
+
+void girar(float actual, float angGiro, float w);
 
 
 #endif

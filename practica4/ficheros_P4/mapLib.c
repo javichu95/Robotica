@@ -255,7 +255,7 @@ bool loadMap(string mapFileName){
 
 	   OpenRead(hFileHandle, nIoResult, mapFileName, nFileSize);
 	   if( nIoResult ==0 ){
-	       nxtDisplayTextLine(1, "OPEN OK: %d", nFileSize);
+	       //nxtDisplayTextLine(1, "OPEN OK: %d", nFileSize);
 
 	       //StringFromChars(sToString, FromChars)
          //Converts an array of bytes to a string value.  You MUST end your char array with a char value of zero!
@@ -519,7 +519,7 @@ void rePlanPath(int celdaX, int celdaY){
 	encontrarCamino(celdaX, celdaY);		// Volver a encontrar el camino.
 
 	// Se escribe la nueva ruta en el fichero.
-	OpenWrite(hFileHandleCuad, nIoCuadricula, cuadricula, nFileSizeCuad);
+/*	OpenWrite(hFileHandleCuad, nIoCuadricula, cuadricula, nFileSizeCuad);
 
 	string sString;
 	for(int i = 2*sizeY; i >= 0; i--) {
@@ -539,7 +539,7 @@ void rePlanPath(int celdaX, int celdaY){
    for(int i = 0; i <= 20; i++) {
     	stringFormat(sString, "%d ", pathY[i]);
     	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}
+	}*/
 
 }
 
@@ -583,7 +583,7 @@ float redondearAng(float angulo){
 		eje = 0;		// Es el eje 0.
 	} else if (angulo > numPi/4 && angulo <= 3*numPi/4) {
 		eje = numPi/2;		// Es el eje PI/2.
-	} else if(angulo > 3*numPi/4 && angulo <= -3*numPi/4) {
+	} else if(angulo > 3*numPi/4 || angulo <= -3*numPi/4) {
 		eje = numPi;				// Es el eje PI.
 	} else{
 		eje = -numPi/2;			// Es el eje -PI/2.
@@ -634,6 +634,76 @@ bool detectObstacle(float theta){
 	return false;
 }
 
+void girar(float actual, float angGiro, float w) {
+	float x, y, theta;
+
+	if(angGiro == numPi/2) {			// Si el giro es de pi/2.
+		if(actual == -numPi/2) {
+			setSpeed(0,w);			// Se asigna la velocidad.
+			readOdometry(x,y,theta);
+			while(theta < 0) {
+					readOdometry(x,y,theta);
+			}
+		} else if(actual == numPi) {
+				setSpeed(0,w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(abs(theta) > numPi/2) {
+					readOdometry(x,y,theta);
+			}
+		} else {
+			setSpeed(0,w);			// Se asigna la velocidad.
+			readOdometry(x,y,theta);
+			while(theta > actual-numPi/2 && theta < actual + numPi/2) {
+				readOdometry(x,y,theta);
+			}
+		}
+	} else {			// Si el giro es pi...
+		if(actual == -numPi/2) {			// Si el eje es -pi/2...
+			setSpeed(0,w);			// Se asigna la velocidad.
+			readOdometry(x,y,theta);
+			while(theta < numPi / 2) {
+				readOdometry(x,y,theta);
+			}
+		} else if(actual == numPi) {		// Si el eje es pi...
+			if(theta < 0) {
+				setSpeed(0,w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(theta < 0) {
+					readOdometry(x,y,theta);
+				}
+			} else {
+				setSpeed(0,-w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(theta > 0) {
+					readOdometry(x,y,theta);
+				}
+			}
+		} else if(actual == numPi / 2) { // Si el eje es pi/2...
+				setSpeed(0,-w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(theta > -numPi/2) {
+					readOdometry(x,y,theta);
+				}
+		} else {			// Si el eje es 0...
+			if(theta < 0) {
+				setSpeed(0,-w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(theta < 0) {
+					readOdometry(x,y,theta);
+				}
+			} else {
+				setSpeed(0,w);			// Se asigna la velocidad.
+				readOdometry(x,y,theta);
+				while(theta > 0) {
+					readOdometry(x,y,theta);
+				}
+			}
+		}
+	}
+	setSpeed(0,0);		// Se para la velocidad.
+
+}
+
 /*
 * Método que planifica el camino desde la posición actual hasta una celda
 * dada.
@@ -654,61 +724,76 @@ bool go(int cellX, int cellY){
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
 
 	if(cellX - coordX == 0){			// Pendiente de la recta infinito.
-			if(y > cellY){			// Se comprueba si la celda destino es mayor o menor.
-				angulo = theta - numPi/2;
-			} else{
-				angulo = theta + numPi/2;
-			}
+		if(coordY > cellY){			// Se comprueba si la celda destino es mayor o menor.
+			angulo = theta - numPi/2;
+		} else{
+			angulo = theta + numPi/2;
+		}
 
 	} else{			// Pendiente de la recta 0.
-		if(x > cellX){			// Se comprueba si la celda destino es mayor o menor.
+		if(coordX > cellX){			// Se comprueba si la celda destino es mayor o menor.
 			angulo = theta - 0;
 		} else{
 			angulo = theta - numPi;
 		}
 	}
 
+	angulo = normalizarAngulo(angulo);
+
 	if(angulo == numPi){		// Si es PI, se va recto.
 		setSpeed(v,0);			// Se asigna la velocidad lineal.
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
 		// Variable para lo recorrido en cada índice.
-		int recorridoX = abs(x);
-		int recorridoY = abs(y);
+		float recorridoX = abs(x);
+		float recorridoY = abs(y);
+
+		/*float restoX = recorridoX / sizeCell;
+		float restoY = recorridoY / sizeCell;
+
+		restoX = restoX - (int)(restoX);
+		restoY = restoY - (int)(restoY);
+
+		recorridoX = recorridoX-(restoX*sizeCell);
+		recorridoY = recorridoY-(restoY*sizeCell);*/
 
 		// Se comprueba si se ha llegado al objetivo.
 		while(abs(x) <= recorridoX + sizeCell && abs(y) <= recorridoY + sizeCell
 				&& abs(x) >= recorridoX - sizeCell && abs(y) >= recorridoY - sizeCell){
-			nxtDisplayTextLine(6, "%d-%d", x, y);
 			readOdometry(x,y,theta);
 		}
+		setSpeed(0,0);
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
+
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
 		float angGiro = numPi/2;
-		if(angulo == 0){			// Se comprueba si se gira 180 grados o 0.
+		if(angulo == 0){			// Se comprueba si se gira PI grados o PI/2.
 			angGiro = numPi;
 		}
 		if(angulo < 0){
 			w = -w;
 		}
 
-		setSpeed(0,w);			// Se asigna la velocidad.
-		readOdometry(x,y,theta);		// Se lee la odometría.
-
-		float actual = theta;			// Se guarda la theta actual.
-
-		while(abs(theta-actual) < angGiro) {		// Mientras no se llegue al objetivo...
-			readOdometry(x,y,theta);		// Se actualiza la odometría leída.
-		}
+		/*if(angGiro == numPi/2) {
+			setSpeed(0,w);
+			wait1Msec(1000);
+		} else {
+			setSpeed(0,w);
+			wait1Msec(2000);
+		}*/
+		girar(theta, angGiro, w);			// Se indica que gire.
+		readOdometry(x,y,theta);			// Se lee la odometría.
+		theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 		if(!hayObstaculo){			// Se detecta si hay un obstáculo.
-			go(cellX, cellY);		// Se realiza el movimiento lineal.
+			hayObstaculo = go(cellX, cellY);		// Se realiza el movimiento lineal.
 		}
-	}
 
+	}
+	drawMap();
 	return hayObstaculo;			// Se devuelve si hay obstáculo.
 
 }
