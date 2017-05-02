@@ -61,9 +61,9 @@ int setSpeed(float v, float w){
 	motor[motorC] = motorPowerLeft;
 
 	// Se muestran las velocidades por pantalla.
-	nxtDisplayTextLine(2, "POTENCIAS");
+	/*nxtDisplayTextLine(2, "POTENCIAS");
   nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
-  nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);
+  nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);*/
 
 	releaseCPU();			// Se libera la CPU.
 

@@ -4,7 +4,7 @@
 //  obstáculo con el sonar.                                                            //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#include "controlVelocidad.c"
+#include "cogerPelota.c"
 
 // Número máximo de celdas que se pueden utilizar.
 #define MAX_X 10
@@ -483,6 +483,91 @@ void iniciarGrid(){
 		}
 	}
 
+}
+
+/*
+ * Método que va asignando costes iterativamente a la cuadrícula.
+ */
+void planPathIter(int x_end, y_end) {
+	//Frontera que indica las posiciones de la cuadricula a actualizar.
+	int fronteraX[MAX_X*MAX_Y];
+	int fronteraY[MAX_X*MAX_Y];
+	bool actualizar[MAX_X*MAX_Y];	//Indica en que celdas se aumenta el coste.
+	
+	//Se inicializan valores de la frontera.
+	for(int i = 0; i < MAX_X*MAX_Y; i++) {
+		fronteraX[i][j] = -1;
+		fronteraY[i][j] = -1;
+		actualizar[i] = false;
+	}
+	
+	int leer = 0, escribir = 0;	//Indices de lectura y escritura en la frontera.
+	int numElementos = 0;		//Elementos que quedan por leer.
+	int coste = 0;				//Coste a introducir.
+	int x, y;					//Indices de la cuadricula.
+	numElementos++;
+	
+	//Se introducen las celdas objetivo.
+	fronteraX[escribir] = x_end;
+	fronteraY[escribir] = y_end;
+	actualizar[escribir] = false;	//Se indica que no se aumenta el coste en este caso.
+	while(numElementos != 0) {		//Mientras queden elementos por leer.
+		bool vecino = false;
+		x = fronteraX[leer];		//Se lee la frontera.
+		y = fronteraY[leer];
+		leer++;					//Se actualiza el indice para la siguiente iteracion.
+		numElementos--;			//Se resta un elemento por leer.
+		
+		if(actualizar[leer]) {
+			coste++;
+		}
+		grid[x][y] = coste;		//Se asigna el coste.
+		
+		//Se añaden los vecinos que se deba añadir.
+		if(grid[x+1][y]!=-1 && grid[x+2][y] < 0) {
+			escribir++;
+			if(!vecino) {
+				actualizar[escribir] = true;
+				vecino = true;
+			}
+			numElementos++;
+			fronteraX[escribir] = x+2;
+			fronteraY[escribir] = y;
+		}
+		
+		if(grid[x-1][y]!=-1 && grid[x-2][y] < 0) {
+			escribir++;
+			if(!vecino) {
+				actualizar[escribir] = true;
+				vecino = true;
+			}
+			numElementos++;
+			fronteraX[escribir] = x-2;
+			fronteraY[escribir] = y;
+		}
+		
+		if(grid[x][y+1]!=-1 && grid[x][y+2] < 0) {
+			escribir++;
+			if(!vecino) {
+				actualizar[escribir] = true;
+				vecino = true;
+			}
+			numElementos++;
+			fronteraX[escribir] = x;
+			fronteraY[escribir] = y+2;
+		}
+		
+		if(grid[x][y-1]!=-1 && grid[x][y-2] < 0) {
+			escribir++;
+			if(!vecino) {
+				actualizar[escribir] = true;
+				vecino = true;
+			}
+			numElementos++;
+			fronteraX[escribir] = x;
+			fronteraY[escribir] = y-2;
+		}
+	}
 }
 
 /*

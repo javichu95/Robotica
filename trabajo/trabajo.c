@@ -1,13 +1,13 @@
 #pragma config(Sensor, S1,     sonar,          sensorSONAR)
 #pragma config(Sensor, S2,     cam,            sensorI2CCustomFastSkipStates)
-#pragma config(Sensor, S3,     lightSensor,    sensorLightActive)
+#pragma config(Sensor, S4,     lightSensor,    sensorLightActive)
 #pragma config(Motor,  motorB,          r_motor,       tmotorNXT, PIDControl)
 #pragma config(Motor,  motorC,          l_motor,       tmotorNXT, PIDControl)
 
 // Librerías para el mapa.
 #include "mapLib.c"
 
-int valorColor = 45;		// Valor del color para elegir el mapa.
+short valorColor = 40;		// Valor del color para elegir el mapa.
 // Coordenadas para la planificación hasta la sala de la pelota.
 int finSBlancaX = 4;
 int finSBlancaY = 7;
@@ -15,6 +15,9 @@ int finSNegraX = 11;
 int finSNegraY = 7;
 int pelotaX = 7;
 int pelotaY = 7;
+float epsIzq = 0.1;
+float epsDer = 0.05;
+float epsGiro90 = 0.08;
 
 /*
 * Método que realiza la S en una cierta dirección dada.
@@ -29,58 +32,69 @@ void realizarS(bool dir){
 		// Primer tramo: GIRO 90º.
 		w = -numPi/2.0;			// Se asigna la velocidad angular.
 		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		do {
+		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th) <= 0.1);
-
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) >= epsGiro90);*/
 		// Segundo tramo: MEDIA CIRCUNFERENCIA.
 		w = v/radio;			// Se calcula la velocidad angular.
 		setSpeed(v,w);   // Se fijan las velocidades.
-		do {
+		wait1Msec(abs(numPi/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th)-numPi <= 0.1);
-
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) <= numPi - epsIzq);*/
 		// Tercer tramo: MEDIA CIRCUNFERENCIA.
 		setSpeed(v,-w);   // Se fijan las velocidades.
-		do {
+		wait1Msec(abs(numPi/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th) <= 0.1);
-
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) >= epsDer);*/
 		// Cuarto tramo: GIRO 90º.
 		w = numPi/2.0;			// Se asigna la velocidad angular.
 		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		do {
+		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th-numPi/2) <= 0.1);
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) <= numPi/2 - epsGiro90);*/
 	}
 
 	else{			// Se comprueba la dirección de la S.
 		// Primer tramo: GIRO 90º.
 		w = numPi/2.0;			// Se asigna la velocidad angular.
 		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		do {
+		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th)-numPi <= 0.1);
-
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) <= numPi - epsGiro90);*/
 		// Segundo tramo: MEDIA CIRCUNFERENCIA.
 		w = v/radio;			// Se calcula la velocidad angular.
-		setSpeed(v,w);   // Se fijan las velocidades.
-		do {
-			readOdometry(x,y,th);
-		} while(abs(th) <= 0.1);
-
-		// Tercer tramo: MEDIA CIRCUNFERENCIA.
+		readOdometry(x,y,th);
 		setSpeed(v,-w);   // Se fijan las velocidades.
-		do {
+		wait1Msec(abs(numPi/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th)-numPi <= 0.1);
-
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) >= epsDer);*/
+		// Tercer tramo: MEDIA CIRCUNFERENCIA.
+		setSpeed(v,w);   // Se fijan las velocidades.
+		wait1Msec(abs(numPi/w)*1000.0);
+		/*do {
+			readOdometry(x,y,th);
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) <= numPi - epsIzq);*/
 		// Cuarto tramo: GIRO 90º.
-		w = -numPi/2.0;			// Se asigna la velocidad angular.
-		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		do {
+		w = numPi/2.0;			// Se asigna la velocidad angular.
+		setSpeed(0,-w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
+		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		/*do {
 			readOdometry(x,y,th);
-		} while(abs(th-numPi/2) <= 0.1);
+			nxtDisplayTextLine(1,"%f",th);
+		} while(abs(th) >= numPi/2 + epsGiro90);*/
 	}
 }
 
@@ -147,12 +161,13 @@ task main(){
 	initConnections();		// Se inicializa la matriz de conexiones.
 
 	startTask(updateOdometry);		// Se inicializa la tarea de odometría.
-
 	// Se comprueba el color de la línea para cargar un mapa u otro.
-	if(SensorValue(ligthSensor) > valorColor){		// Salida blanca.
+	if(SensorValue(lightSensor) > valorColor){		// Salida blanca.
+		nxtDisplayTextLine(1,"BLANCO");
 		ejecutarBlanca();
 	}
 	else{			// Salida negra.
+		nxtDisplayTextLine(1,"NEGRO");
 		ejecutarNegra();
 	}
 

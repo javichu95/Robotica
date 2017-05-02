@@ -159,7 +159,7 @@ void buscarAtrapar(){
 		}
 
 		if(!encontrada){		// Si no encuentra la pelota, la busca.
-			buscar(lastBloopIzq > 176);
+				buscar(lastBloopIzq > 176);
 		} else{			// Si la ha encontrado...
 				float error = centroPelota(bl, br, bt, bb, blopMayor);	// Centra la pelota.
 				float angular = error*0.002;			// Se asigna la velocidad angular.
