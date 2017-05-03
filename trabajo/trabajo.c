@@ -9,7 +9,7 @@
 
 short valorColor = 40;		// Valor del color para elegir el mapa.
 // Coordenadas para la planificación hasta la sala de la pelota.
-int finSBlancaX = 4;
+int finSBlancaX = 3;
 int finSBlancaY = 7;
 int finSNegraX = 11;
 int finSNegraY = 7;
@@ -138,6 +138,8 @@ void ejecutarNegra(){
 
 	encontrarCamino(finSNegraX,finSNegraY);		// Se encuentra el camino.
 
+	//drawMap();
+
 	recorrerCamino();		// Se recorre el camino.
 
 	buscarAtrapar();		// Se busca la pelota y se atrapa.
@@ -156,8 +158,54 @@ void ejecutarNegra(){
 */
 task main(){
 
-	// Se inicializa la odometría y la matriz de conexiones.
+	/*initConnections();
+
 	set_position(robot_odometry, INI_X, INI_Y, INI_TH);
+
+	string mapa = "mapa2.txt";
+
+	loadMap(mapa);
+
+	drawMap();
+
+	planPath(11,9,finSBlancaX,finSBlancaY);
+
+  encontrarCamino(11,9);
+
+  startTask(updateOdometry);
+  recorrerCamino();
+  stopTask(updateOdometry);
+
+	string file = "grid.txt";
+	TFileIOResult nIoCuadricula;
+	TFileHandle hFileHandleCuad = 0;
+	short nFileSizeCuad = 2000;			// Tamaño del fichero.
+
+	OpenWrite(hFileHandleCuad, nIoCuadricula, file, nFileSizeCuad);
+	string sString;
+
+	for(int i = 2*sizeY; i >= 0; i--) {
+		for(int j = 0; j <= 2*sizeX; j++) {
+			stringFormat(sString, "%d ", grid[j][i]);
+    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
+		}
+		 WriteText(hFileHandleCuad, nIoCuadricula, "\n");
+	}
+
+	for(int j = 0; j <= 20; j++) {
+		stringFormat(sString, "%d ", pathX[j]);
+    WriteText(hFileHandleCuad, nIoCuadricula, sString);
+	}
+   WriteText(hFileHandleCuad, nIoCuadricula, "\n");
+
+   for(int i = 0; i <= 20; i++) {
+    	stringFormat(sString, "%d ", pathY[i]);
+    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
+	}*/
+
+
+	// Se inicializa la odometría y la matriz de conexiones.
+	set_position(robot_odometry, INI_X, INI_Y, -numPi/2);
 	initConnections();		// Se inicializa la matriz de conexiones.
 
 	startTask(updateOdometry);		// Se inicializa la tarea de odometría.
@@ -172,6 +220,7 @@ task main(){
 	}
 
 	stopTask(updateOdometry);			// Se para la tarea de odometría.
+
 }
 
 /*

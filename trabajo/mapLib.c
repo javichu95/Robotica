@@ -170,7 +170,7 @@ bool readLineHeader(TFileHandle hFileHandle,TFileIOResult nIoResult, int & dimX,
               endfile=true;
 
             }else{
-              nxtDisplayTextLine(1, "PROBLEM READING map");
+              //nxtDisplayTextLine(1, "PROBLEM READING map");
             }
         }
      }
@@ -229,7 +229,7 @@ bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRo
                 //indNum++;
               }else{
                 if (onechar=='1'){
-                  nxtDisplayTextLine(3, " %d %d", mapCol,mapRow);
+                  //nxtDisplayTextLine(3, " %d %d", mapCol,mapRow);
                   connectionsMatrix[mapCol][mapRow]=true;
                 }
                 // else { false} // by default is false
@@ -246,7 +246,7 @@ bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRo
               endfile=true;
 
             }else{
-              nxtDisplayTextLine(1, "PROBLEM READING map");
+              //nxtDisplayTextLine(1, "PROBLEM READING map");
             }
         }
      }
@@ -264,7 +264,7 @@ bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRo
         numbersRead[indNum]=num;
      }*/
 
-     nxtDisplayTextLine(3, "%s ", linestring);
+     //nxtDisplayTextLine(3, "%s ", linestring);
 
      /*for(int j=2; j<=indNum; ++j){
         setConnection(numbersRead[0], numbersRead[1], numbersRead[j]);
@@ -316,7 +316,7 @@ bool loadMap(string mapFileName){
      }
      else{
            loadingOk=false;
-           nxtDisplayTextLine(1, "PROBLEM OPENING file");
+           //nxtDisplayTextLine(1, "PROBLEM OPENING file");
      }
 
 	   return loadingOk;
@@ -412,48 +412,6 @@ void drawRobot(float x_mm, float y_mm, float ang_rad){
 
 }
 
-/*
- * Método que va asignando costes recursivamente a la cuadrícula.
- */
-void planPath(int coordenadaX, int coordenadaY, int coste){
-
-  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
-  if(grid[coordenadaX+1][coordenadaY] != -1 && coordenadaX+2 <= 2*sizeX) {
-		if(grid[coordenadaX+2][coordenadaY]	< -1 || grid[coordenadaX+2][coordenadaY] > coste) {
-      // Asigna el coste y realiza la llamada recursiva.
-			grid[coordenadaX+2][coordenadaY] = coste;
-			planPath(coordenadaX+2,coordenadaY, coste+1);
-		}
-	}
-
-  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
-	if(grid[coordenadaX-1][coordenadaY] != -1 && coordenadaX-2 >= 0) {
-		if(grid[coordenadaX-2][coordenadaY]	< -1 || grid[coordenadaX-2][coordenadaY] > coste) {
-      // Asigna el coste y realiza la llamada recursiva.
-			grid[coordenadaX-2][coordenadaY] = coste;
-			planPath(coordenadaX-2,coordenadaY, coste+1);
-		}
-	}
-
-  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
-	if(grid[coordenadaX][coordenadaY+1] != -1 && coordenadaY+2 <= 2*sizeY) {
-		if(grid[coordenadaX][coordenadaY+2]	< -1 || grid[coordenadaX][coordenadaY+2] > coste) {
-      // Asigna el coste y realiza la llamada recursiva.
-			grid[coordenadaX][coordenadaY+2] = coste;
-			planPath(coordenadaX,coordenadaY+2, coste+1);
-		}
-	}
-
-  // Comprueba si es una celda válida y si el coste que ya hay es mayor.
-	if(grid[coordenadaX][coordenadaY-1] != -1 && coordenadaY-2 >= 0) {
-		if(grid[coordenadaX][coordenadaY-2]	< -1 || grid[coordenadaX][coordenadaY-2] > coste) {
-      // Asigna el coste y realiza la llamada recursiva.
-			grid[coordenadaX][coordenadaY-2] = coste;
-			planPath(coordenadaX,coordenadaY-2, coste+1);
-		}
-	}
-
-}
 
 /*
  * Método que asigna el valor -1 a obstáculos.
@@ -488,84 +446,68 @@ void iniciarGrid(){
 /*
  * Método que va asignando costes iterativamente a la cuadrícula.
  */
-void planPathIter(int x_end, y_end) {
+void planPath(int x_end, int y_end) {
 	//Frontera que indica las posiciones de la cuadricula a actualizar.
 	int fronteraX[MAX_X*MAX_Y];
 	int fronteraY[MAX_X*MAX_Y];
-	bool actualizar[MAX_X*MAX_Y];	//Indica en que celdas se aumenta el coste.
-	
+
 	//Se inicializan valores de la frontera.
 	for(int i = 0; i < MAX_X*MAX_Y; i++) {
-		fronteraX[i][j] = -1;
-		fronteraY[i][j] = -1;
-		actualizar[i] = false;
+		fronteraX[i] = -1;
+		fronteraY[i] = -1;
 	}
-	
+
 	int leer = 0, escribir = 0;	//Indices de lectura y escritura en la frontera.
 	int numElementos = 0;		//Elementos que quedan por leer.
 	int coste = 0;				//Coste a introducir.
 	int x, y;					//Indices de la cuadricula.
 	numElementos++;
-	
+
 	//Se introducen las celdas objetivo.
 	fronteraX[escribir] = x_end;
 	fronteraY[escribir] = y_end;
-	actualizar[escribir] = false;	//Se indica que no se aumenta el coste en este caso.
+	grid[x_end][y_end] = 0;		//Se asigna el coste.
 	while(numElementos != 0) {		//Mientras queden elementos por leer.
-		bool vecino = false;
 		x = fronteraX[leer];		//Se lee la frontera.
 		y = fronteraY[leer];
+
 		leer++;					//Se actualiza el indice para la siguiente iteracion.
 		numElementos--;			//Se resta un elemento por leer.
-		
-		if(actualizar[leer]) {
-			coste++;
-		}
-		grid[x][y] = coste;		//Se asigna el coste.
-		
+
+		coste = grid[x][y]+1;
+
+
 		//Se añaden los vecinos que se deba añadir.
 		if(grid[x+1][y]!=-1 && grid[x+2][y] < 0) {
 			escribir++;
-			if(!vecino) {
-				actualizar[escribir] = true;
-				vecino = true;
-			}
 			numElementos++;
 			fronteraX[escribir] = x+2;
 			fronteraY[escribir] = y;
+			grid[x+2][y] = coste;
 		}
-		
+
 		if(grid[x-1][y]!=-1 && grid[x-2][y] < 0) {
 			escribir++;
-			if(!vecino) {
-				actualizar[escribir] = true;
-				vecino = true;
-			}
 			numElementos++;
 			fronteraX[escribir] = x-2;
 			fronteraY[escribir] = y;
+			grid[x-2][y] = coste;
 		}
-		
+
 		if(grid[x][y+1]!=-1 && grid[x][y+2] < 0) {
 			escribir++;
-			if(!vecino) {
-				actualizar[escribir] = true;
-				vecino = true;
-			}
 			numElementos++;
 			fronteraX[escribir] = x;
 			fronteraY[escribir] = y+2;
+			grid[x][y+2] = coste;
 		}
-		
+
 		if(grid[x][y-1]!=-1 && grid[x][y-2] < 0) {
 			escribir++;
-			if(!vecino) {
-				actualizar[escribir] = true;
-				vecino = true;
-			}
 			numElementos++;
 			fronteraX[escribir] = x;
 			fronteraY[escribir] = y-2;
+			grid[x][y-2] = coste;
 		}
 	}
 }
@@ -589,7 +531,7 @@ void planPath(int x_ini, int y_ini, int x_end, int y_end){
 
 	grid[x_end][y_end] = 0;			// Se asigna el valor 0 al objetivo.
 
-	planPath(x_end, y_end, 1);		// Se planifica el camino.
+	planPath(x_end, y_end);		// Se planifica el camino.
 
 }
 
@@ -643,8 +585,12 @@ void encontrarCamino(int x_ini, int y_ini){
 */
 void rePlanPath(int celdaX, int celdaY){
 
+	//drawMap();
+
 	planPath(celdaX, celdaY, celdaXFin, celdaYFin);			// Se replanifica la ruta.
 	encontrarCamino(celdaX, celdaY);		// Volver a encontrar el camino.
+
+	//drawMap();
 
 	// Se escribe la nueva ruta en el fichero.
 /*	OpenWrite(hFileHandleCuad, nIoCuadricula, cuadricula, nFileSizeCuad);
@@ -907,6 +853,12 @@ bool go(int cellX, int cellY){
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
+		nxtDisplayTextLine(3,"%f", x);
+		nxtDisplayTextLine(4,"%f", y);
+		nxtDisplayTextLine(5,"%f", theta);
+		setSpeed(0,0);
+		wait1Msec(10000);
+
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
 		float angGiro = numPi/2;
@@ -931,8 +883,19 @@ bool go(int cellX, int cellY){
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
+		nxtDisplayTextLine(3,"%f", x);
+		nxtDisplayTextLine(4,"%f", y);
+		nxtDisplayTextLine(5,"%f", theta);
+		setSpeed(0,0);
+		wait1Msec(10000);
+
 		if(!hayObstaculo){			// Si no hay un obstáculo...
 			hayObstaculo = go(cellX, cellY);		// Se realiza el movimiento lineal hasta la celda objetivo.
+			nxtDisplayTextLine(3,"%f", x);
+			nxtDisplayTextLine(4,"%f", y);
+			nxtDisplayTextLine(5,"%f", theta);
+			setSpeed(0,0);
+			wait1Msec(10000);
 		}
 
 	}
@@ -951,6 +914,8 @@ void recorrerCamino(){
 	bool hayObs = false;		// Booleano para saber si hay un obstáculo.
 
 	while(seguir){			// Mientras no se llegue al objetivo.
+
+		nxtDisplayTextLine(2,"%d,%d", pathX[ind-1], pathY[ind-1]);
 
 		hayObs = go(pathX[ind],pathY[ind]);		// Indica que comience a avanzar.
 
