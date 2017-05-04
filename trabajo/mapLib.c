@@ -26,8 +26,8 @@ int pixPerY;		// Píxeles por eje Y.
 // Coordenadas de la celda final e inicial.
 int celdaXFin;
 int celdaYFin;
-int celdaXIni;
-int celdaYIni;
+int celdaOdoX;
+int celdaOdoY;
 
 // Booleano para indicar que es el camino inicial.
 bool isPrimero = true;
@@ -515,7 +515,7 @@ void planPath(int x_end, int y_end) {
 /*
  * Método que inicializa el algoritmo NF1 para ir dando valores.
  */
-void planPath(int x_ini, int y_ini, int x_end, int y_end){
+void planPath(int x_ini, int y_ini, int x_end, int y_end, int x_odo, int y_odo){
 
 	iniciarGrid();			// Inicializa al cuadrícula.
 	asignarValores();		// Coloca los obstáculos.
@@ -524,8 +524,8 @@ void planPath(int x_ini, int y_ini, int x_end, int y_end){
 	if(isPrimero){
 		celdaXFin = x_end;
 		celdaYFin = y_end;
-		celdaXIni = x_ini;
-		celdaYIni = y_ini;
+		celdaOdoX = x_odo;
+		celdaOdoY = y_odo;
 		isPrimero = false;			// Se indica que ya no será la primera.
 	}
 
@@ -587,7 +587,7 @@ void rePlanPath(int celdaX, int celdaY){
 
 	//drawMap();
 
-	planPath(celdaX, celdaY, celdaXFin, celdaYFin);			// Se replanifica la ruta.
+	planPath(celdaX, celdaY, celdaXFin, celdaYFin, celdaOdoX, celdaOdoY);			// Se replanifica la ruta.
 	encontrarCamino(celdaX, celdaY);		// Volver a encontrar el camino.
 
 	//drawMap();
@@ -636,7 +636,7 @@ int redondearCoord(float coord){
 		resto = -resto;
 	}
 
-	if(resto >= 0.75){		// Si el resto es mayor que 0.75...
+	if(resto >= 0.65){		// Si el resto es mayor que 0.75...
 		resultado = ((((int)(div))+1)*2)*signo;		// Se asigna a la siguiente celda.
 	} else{			// Si no es mayor que 0.75...
 		resultado = ((int)(div));			// Se asigna la celda actual.
@@ -681,8 +681,8 @@ bool detectObstacle(float theta){
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
 		// Se obtiene la celda en la que está el obstáculo.
-		int celdaX = redondearCoord(x) + celdaXIni;
-		int celdaY = redondearCoord(y) + celdaYIni;
+		int celdaX = redondearCoord(x) + celdaOdoX;
+		int celdaY = redondearCoord(y) + celdaOdoY;
 
 		// Se saca el vecino entre el que está el obstáculo
 		int  xconn = celdaX, yconn = celdaY;
@@ -802,13 +802,11 @@ bool go(int cellX, int cellY){
 	float w = numPi/2;			// Velocidad angular.
 	float v = 150;					// Velocidad lineal.
 
-
 	// Se saca la celda en la que estamos.
-	int coordX = redondearCoord(x) + celdaXIni;
-	int coordY = redondearCoord(y) + celdaYIni;
+	int coordX = redondearCoord(x) + celdaOdoX;
+	int coordY = redondearCoord(y) + celdaOdoY;
 
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
-
 	if(cellX - coordX == 0){			// Pendiente de la recta infinito.
 		if(coordY > cellY){			// Se comprueba si la celda destino es mayor o menor.
 			angulo = theta - numPi/2;
@@ -831,8 +829,8 @@ bool go(int cellX, int cellY){
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
 		// Variable para lo recorrido en cada índice.
-		float recorridoX = abs(x);
-		float recorridoY = abs(y);
+		float recorridoX = x;
+		float recorridoY = y;
 
 		/*float restoX = recorridoX / sizeCell;
 		float restoY = recorridoY / sizeCell;
@@ -843,21 +841,24 @@ bool go(int cellX, int cellY){
 		recorridoX = recorridoX-(restoX*sizeCell);
 		recorridoY = recorridoY-(restoY*sizeCell);*/
 
+		nxtDisplayTextLine(2,"%f", x);
+		nxtDisplayTextLine(3,"%f", y);
+		nxtDisplayTextLine(4,"%f", theta);
 		// Se comprueba si se ha llegado al objetivo.
-		while(abs(x) <= recorridoX + sizeCell && abs(y) <= recorridoY + sizeCell
-				&& abs(x) >= recorridoX - sizeCell && abs(y) >= recorridoY - sizeCell){
+		while(x <= recorridoX + sizeCell && y <= recorridoY + sizeCell
+				&& x >= recorridoX - sizeCell && y >= recorridoY - sizeCell){
 			readOdometry(x,y,theta);
+			nxtDisplayTextLine(2,"%f", x);
+			nxtDisplayTextLine(3,"%f", y);
+			nxtDisplayTextLine(4,"%f", theta);
 		}
 
 		setSpeed(0,0);	// Se paran los motores.
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
-		nxtDisplayTextLine(3,"%f", x);
-		nxtDisplayTextLine(4,"%f", y);
-		nxtDisplayTextLine(5,"%f", theta);
 		setSpeed(0,0);
-		wait1Msec(10000);
+		wait1Msec(2000);
 
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
@@ -883,21 +884,14 @@ bool go(int cellX, int cellY){
 
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
-		nxtDisplayTextLine(3,"%f", x);
-		nxtDisplayTextLine(4,"%f", y);
-		nxtDisplayTextLine(5,"%f", theta);
 		setSpeed(0,0);
-		wait1Msec(10000);
+		wait1Msec(2000);
 
 		if(!hayObstaculo){			// Si no hay un obstáculo...
 			hayObstaculo = go(cellX, cellY);		// Se realiza el movimiento lineal hasta la celda objetivo.
-			nxtDisplayTextLine(3,"%f", x);
-			nxtDisplayTextLine(4,"%f", y);
-			nxtDisplayTextLine(5,"%f", theta);
 			setSpeed(0,0);
-			wait1Msec(10000);
+			wait1Msec(2000);
 		}
-
 	}
 
 	return hayObstaculo;			// Se devuelve si hay obstáculo.
@@ -914,8 +908,6 @@ void recorrerCamino(){
 	bool hayObs = false;		// Booleano para saber si hay un obstáculo.
 
 	while(seguir){			// Mientras no se llegue al objetivo.
-
-		nxtDisplayTextLine(2,"%d,%d", pathX[ind-1], pathY[ind-1]);
 
 		hayObs = go(pathX[ind],pathY[ind]);		// Indica que comience a avanzar.
 

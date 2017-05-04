@@ -67,6 +67,25 @@ void aflojarPinza() {
 
 }
 
+bool cogida() {
+	int _nblobs = 0;								// Número de blops detectados.
+	int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
+	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
+	for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
+
+			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
+				// Se calcula su área.
+				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
+				if(area > AREA_COLOR && bt[i] < 144) {		// Se compara con el mayor área vista.
+					return true;
+				}
+
+			}
+
+		}
+	return false;
+}
+
 /*
  * Método que centra la pelota en la cámara.
  */
@@ -90,9 +109,9 @@ float centroPelota(int_array bl, int_array br, int_array bt, int_array bb, int i
 void buscar(bool derecha){
 
 	if(derecha) {
-		setSpeed(0,-numPi);		// Se fija la velocidad angular para dar vueltas.
+		setSpeed(0,-numPi/2);		// Se fija la velocidad angular para dar vueltas.
 	} else {
-		setSpeed(0,numPi);		// Se fija la velocidad angular para dar vueltas.
+		setSpeed(0,numPi/2);		// Se fija la velocidad angular para dar vueltas.
 	}
 }
 
@@ -105,7 +124,7 @@ bool atraparPelota(float area, float w){
 
 	if(area < AREA_COLOR) {		// Si el area no es grande avanza hacia la pelota.
 
-		setSpeed(400,w);		// Fija la velocidad.
+		setSpeed(150,w);		// Fija la velocidad.
 		wait1Msec(1000);			// Espera un tiempo.
 		return false;		// Indica que no ha cogido la pelota.
 	}
@@ -115,7 +134,7 @@ bool atraparPelota(float area, float w){
 		wait1Msec(1000);			// Se espera un tiempo.
 		setSpeed(70,0);			// Se avanza linealmente.
 		wait1Msec(2000);		// Se espera un tiempo.
-		setSpeed(0, 0);	// Se detiene al robot.
+		setSpeed(0, 0);	// Se detiene al robot.3.
 		cerrarPinza();	// Se cierra la pinza.
 		return true;	// Indica que se ha cogido la pelota.
 	}
@@ -126,6 +145,7 @@ bool atraparPelota(float area, float w){
  * Método principal que centra al robot y coge la pelota.
  */
 void buscarAtrapar(){
+	abrirPinza();				//Se abre ls pinza
 
 	bool continueTracking = true;		// Booleano para indicar si se sigue el tracking.
 	int _nblobs = 0;								// Número de blops detectados.
@@ -171,6 +191,9 @@ void buscarAtrapar(){
 	}
 
 	aflojarPinza();		// Afloja la pinza.
-	wait1Msec(5000);		// Espera un tiempo.
-	abrirPinza();			// Abre la pinza.
+	if(cogida()) {
+		setSpeed(0,numPi);
+		wait1Msec(1000);
+	}
+	setSpeed(0,0);
 }

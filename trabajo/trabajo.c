@@ -9,6 +9,10 @@
 
 short valorColor = 40;		// Valor del color para elegir el mapa.
 // Coordenadas para la planificación hasta la sala de la pelota.
+int inicialBlancaX = 3;
+int inicialBlancaY = 15;
+int inicialNegraX = 11;
+int inicialNegraY = 15;
 int finSBlancaX = 3;
 int finSBlancaY = 7;
 int finSNegraX = 11;
@@ -29,14 +33,6 @@ void realizarS(bool dir){
   float x, y, th;		// Variables para la odometría.
 
 	if(dir){			// Se comprueba la dirección de la S.
-		// Primer tramo: GIRO 90º.
-		w = -numPi/2.0;			// Se asigna la velocidad angular.
-		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		wait1Msec(abs(numPi/2.0/w)*1000.0);
-		/*do {
-			readOdometry(x,y,th);
-			nxtDisplayTextLine(1,"%f",th);
-		} while(abs(th) >= epsGiro90);*/
 		// Segundo tramo: MEDIA CIRCUNFERENCIA.
 		w = v/radio;			// Se calcula la velocidad angular.
 		setSpeed(v,w);   // Se fijan las velocidades.
@@ -63,15 +59,6 @@ void realizarS(bool dir){
 	}
 
 	else{			// Se comprueba la dirección de la S.
-		// Primer tramo: GIRO 90º.
-		w = numPi/2.0;			// Se asigna la velocidad angular.
-		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
-		wait1Msec(abs(numPi/2.0/w)*1000.0);
-		/*do {
-			readOdometry(x,y,th);
-			nxtDisplayTextLine(1,"%f",th);
-		} while(abs(th) <= numPi - epsGiro90);*/
-		// Segundo tramo: MEDIA CIRCUNFERENCIA.
 		w = v/radio;			// Se calcula la velocidad angular.
 		readOdometry(x,y,th);
 		setSpeed(v,-w);   // Se fijan las velocidades.
@@ -108,13 +95,42 @@ void ejecutarBlanca(){
 
 	realizarS(true);		// Se hace la S a la derecha.
 
-	planPath(finSBlancaX,finSBlancaY,pelotaX,pelotaY);		// Se planifica el camino desde la celda final.
+	// Se planifica el camino desde la celda final.
+	planPath(finSBlancaX, finSBlancaY, pelotaX, pelotaY,
+				inicialBlancaX, inicialBlancaY);
 
 	encontrarCamino(finSBlancaX,finSBlancaY);		// Se encuentra el camino.
 
+	string file = "grid.txt";
+	TFileIOResult nIoCuadricula;
+	TFileHandle hFileHandleCuad = 0;
+	short nFileSizeCuad = 2000;			// Tamaño del fichero.
+
+	OpenWrite(hFileHandleCuad, nIoCuadricula, file, nFileSizeCuad);
+	string sString;
+
+	for(int i = 2*sizeY; i >= 0; i--) {
+		for(int j = 0; j <= 2*sizeX; j++) {
+			stringFormat(sString, "%d ", grid[j][i]);
+    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
+		}
+		 WriteText(hFileHandleCuad, nIoCuadricula, "\n");
+	}
+
+	for(int j = 0; j <= 20; j++) {
+		stringFormat(sString, "%d ", pathX[j]);
+    WriteText(hFileHandleCuad, nIoCuadricula, sString);
+	}
+   WriteText(hFileHandleCuad, nIoCuadricula, "\n");
+
+   for(int i = 0; i <= 20; i++) {
+    	stringFormat(sString, "%d ", pathY[i]);
+    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
+    }
+
 	recorrerCamino();		// Se recorre el camino.
 
-	buscarAtrapar();		// Se busca la pelota y se atrapa.
+	//buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
 
@@ -134,7 +150,8 @@ void ejecutarNegra(){
 
 	realizarS(false);		// Se hace la S a la derecha.
 
-	planPath(finSNegraX,finSNegraY, pelotaX, pelotaY);		// Se planifica el camino desde la celda final.
+	planPath(finSNegraX, finSNegraY, pelotaX, pelotaY,
+				inicialNegraX, inicialNegraY);
 
 	encontrarCamino(finSNegraX,finSNegraY);		// Se encuentra el camino.
 
@@ -142,7 +159,7 @@ void ejecutarNegra(){
 
 	recorrerCamino();		// Se recorre el camino.
 
-	buscarAtrapar();		// Se busca la pelota y se atrapa.
+	//buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
 
@@ -205,16 +222,18 @@ task main(){
 
 
 	// Se inicializa la odometría y la matriz de conexiones.
-	set_position(robot_odometry, INI_X, INI_Y, -numPi/2);
 	initConnections();		// Se inicializa la matriz de conexiones.
 
 	startTask(updateOdometry);		// Se inicializa la tarea de odometría.
 	// Se comprueba el color de la línea para cargar un mapa u otro.
 	if(SensorValue(lightSensor) > valorColor){		// Salida blanca.
+
+		set_position(robot_odometry, INI_X, INI_Y, numPi);
 		nxtDisplayTextLine(1,"BLANCO");
 		ejecutarBlanca();
 	}
 	else{			// Salida negra.
+		set_position(robot_odometry, INI_X, INI_Y, 0.0);
 		nxtDisplayTextLine(1,"NEGRO");
 		ejecutarNegra();
 	}
