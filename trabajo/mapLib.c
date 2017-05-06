@@ -16,6 +16,9 @@ TFileHandle hFileHandleCuad = 0;
 short nFileSizeCuad = 2000;			// Tamaño del fichero.
 string cuadricula = "grid.txt";     // Nombre del fichero.
 
+
+int distancia = 31;		// Distancia al obstáculo.
+
 // Variables globales de las dimensiones del mapa
 int sizeX;			// Tamaño en el eje X.
 int sizeY;			// Tamaño en el eje Y.
@@ -28,6 +31,9 @@ int celdaXFin;
 int celdaYFin;
 int celdaOdoX;
 int celdaOdoY;
+
+//Indica en que coordenada se la tira blanca.
+int xTiraBlanca = 0;
 
 // Booleano para indicar que es el camino inicial.
 bool isPrimero = true;
@@ -673,9 +679,6 @@ float redondearAng(float angulo){
 */
 bool detectObstacle(float theta){
 
-	int distancia = 31;		// Distancia al obstáculo.
-
-
 		float x,y;			// Variables para la odometría.
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
@@ -722,71 +725,97 @@ void girar(float actual, float angGiro, float w) {
 	if(angGiro == numPi/2) {			// Si el giro es de PI/2.
 		if(actual == -numPi/2) {		// Se mira el ángulo en el que está.
 			setSpeed(0,w);			// Se asigna la velocidad.
-			readOdometry(x,y,theta);		// Se lee la odometría.
+			/*readOdometry(x,y,theta);		// Se lee la odometría.
 			while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-			}
+			}*/
 		} else if(actual == numPi) {		// Se mira el ángulo en el que está.
 				setSpeed(0,w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(abs(theta) > numPi/2) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-			}
+			}*/
 		} else {			// Se mira el ángulo en el que está.
 			setSpeed(0,w);			// Se asigna la velocidad.
-			readOdometry(x,y,theta);		// Se lee la odometría.
+			/*readOdometry(x,y,theta);		// Se lee la odometría.
 			// Se comprueba si se ha llegado al destino.
 			while(theta > actual-numPi/2 && theta < actual + numPi/2) {
 				readOdometry(x,y,theta);
-			}
+			}*/
 		}
 	} else {			// Si el giro es PI...
 		if(actual == -numPi/2) {			// Si el eje es -PI/2...
 			setSpeed(0,w);			// Se asigna la velocidad.
-			readOdometry(x,y,theta);		// Se lee la odometría.
+			/*readOdometry(x,y,theta);		// Se lee la odometría.
 			while(theta < numPi / 2) {		// Se comprueba si se ha llegado al destino.
 				readOdometry(x,y,theta);
-			}
+			}*/
 		} else if(actual == numPi) {		// Si el eje es PI...
 			if(theta < 0) {		// Se comprueba la dirección de giro.
 				setSpeed(0,w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-				}
+				}*/
 			} else {			// Se comprueba la dirección de giro.
 				setSpeed(0,-w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-				}
+				}*/
 			}
 		} else if(actual == numPi / 2) { // Si el eje es PI/2...
 				setSpeed(0,-w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > -numPi/2) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-				}
+				}*/
 		} else {			// Si el eje es 0...
 			if(theta < 0) {		// Se comprueba la dirección de giro.
 				setSpeed(0,-w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-				}
+				}*/
 			} else {		// Se comprueba la dirección de giro.
 				setSpeed(0,w);			// Se asigna la velocidad.
-				readOdometry(x,y,theta);		// Se lee la odometría.
+				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
-				}
+				}*/
 			}
 		}
 	}
-
+	girarHasta(angGiro);
 	setSpeed(0,0);		// Se para la velocidad.
 
 }
+
+/*
+ * Detecta la tira blanca para resetear la odometria.
+ */
+void detectarTira() {
+		float x, y, th;
+		setSpeed(100,0);			//Se avanza hasta detectar la tira.
+		while(sensorValue(lightSensor) > valorColor){}
+		setSpeed(0,0);
+
+		//Se actualiza la odometria con los datos obtenidos.
+		readOdometry(x,y,th);
+		float posicionActualX = (x-celdaOdoX)*sizeCell;
+		posicionActualX = posicionActualX - (sizeCell/2 * posicionActualX/abs(posicionActualX));
+		resetOdometry(posicionActualX, y, th);
+
+		//Se avanza media baldosa para que el robot este centrado.
+		readOdometry(x, y, th);
+		float recorridoX = x;
+		setSpeed(150,0);
+		while(x < recorridoX + sizeCell/2 && x > recorridoX -sizeCell/2) {
+			readOdometry(x, y ,th);
+		}
+		setSpeed(0,0);
+}
+
 
 /*
 * Método que planifica el camino desde la posición actual hasta una celda
@@ -827,39 +856,44 @@ bool go(int cellX, int cellY){
 	angulo = normalizarAngulo(angulo);		// Se normaliza el ángulo.
 
 	if(angulo == numPi){		// Si es PI, se va recto.
-		setSpeed(v,0);			// Se asigna la velocidad lineal.
-		readOdometry(x,y,theta);		// Se lee la odometría.
+		if(cellX == xTiraBlanca) {
+			detectarTira();
+		} else {
+				setSpeed(v,0);			// Se asigna la velocidad lineal.
+				readOdometry(x,y,theta);		// Se lee la odometría.
 
-		// Variable para lo recorrido en cada índice.
-		float recorridoX = x;
-		float recorridoY = y;
+				// Variable para lo recorrido en cada índice.
+				float recorridoX = x;
+				float recorridoY = y;
 
-		/*float restoX = recorridoX / sizeCell;
-		float restoY = recorridoY / sizeCell;
+				/*float restoX = recorridoX / sizeCell;
+				float restoY = recorridoY / sizeCell;
 
-		restoX = restoX - (int)(restoX);
-		restoY = restoY - (int)(restoY);
+				restoX = restoX - (int)(restoX);
+				restoY = restoY - (int)(restoY);
 
-		recorridoX = recorridoX-(restoX*sizeCell);
-		recorridoY = recorridoY-(restoY*sizeCell);*/
+				recorridoX = recorridoX-(restoX*sizeCell);
+				recorridoY = recorridoY-(restoY*sizeCell);*/
 
-		nxtDisplayTextLine(2,"%f", x);
-		nxtDisplayTextLine(3,"%f", y);
-		nxtDisplayTextLine(4,"%f", theta);
-		// Se comprueba si se ha llegado al objetivo.
-		while(x <= recorridoX + sizeCell && y <= recorridoY + sizeCell
-				&& x >= recorridoX - sizeCell && y >= recorridoY - sizeCell){
-			readOdometry(x,y,theta);
-			nxtDisplayTextLine(2,"%f", x);
-			nxtDisplayTextLine(3,"%f", y);
-			nxtDisplayTextLine(4,"%f", theta);
+				nxtDisplayTextLine(2,"%f", x);
+				nxtDisplayTextLine(3,"%f", y);
+				nxtDisplayTextLine(4,"%f", theta);
+				// Se comprueba si se ha llegado al objetivo.
+				while(x <= recorridoX + sizeCell && y <= recorridoY + sizeCell
+						&& x >= recorridoX - sizeCell && y >= recorridoY - sizeCell){
+					readOdometry(x,y,theta);
+					nxtDisplayTextLine(2,"%f", x);
+					nxtDisplayTextLine(3,"%f", y);
+					nxtDisplayTextLine(4,"%f", theta);
+				}
+
+				setSpeed(0,0);	// Se paran los motores.
+
+				hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
+
+				setSpeed(0,0);
 		}
 
-		setSpeed(0,0);	// Se paran los motores.
-
-		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
-
-		setSpeed(0,0);
 		wait1Msec(2000);
 
 	}
