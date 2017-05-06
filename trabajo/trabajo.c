@@ -7,6 +7,9 @@
 // Librerías para el mapa.
 #include "mapLib.c"
 
+#define BLUE 1
+#define COLOR_PUERTA BLUE
+
 short valorColor = 40;		// Valor del color para elegir el mapa.
 // Coordenadas para la planificación hasta la sala de la pelota.
 int inicialBlancaX = 3;
@@ -86,6 +89,37 @@ void realizarS(bool dir){
 }
 
 /*
+ * Detecta la puerta de salida del laberinto.
+ */
+void encontrarPuerta() {
+		bool encontrada = false;
+		int _nblobs = 0;								// Número de blops detectados.
+		int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
+		int indice = 0;
+		init_camera(cam);								// Se inicializa la cámara.
+		nxtDisplayTextLine(4,"ENTROOOOOOOO");
+    while(!encontrada) {
+    	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
+
+			for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
+				if (bc[i] == COLOR_PUERTA){			// Si el color coincide...
+				// Se calcula su área.
+				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
+				if(area > 400){
+					encontrada = true;
+					indice = i;
+				}
+				}
+			}
+			if(!encontrada) {
+				buscar(false);
+			}
+  	}
+  	float error = centroPelota(bl, br, bt, bb,indice);
+
+}
+
+/*
 * Método que ejecuta el circuito si la salida es la blanca.
 */
 void ejecutarBlanca(){
@@ -93,7 +127,7 @@ void ejecutarBlanca(){
 	string mapa = "mapaA.txt";		// Se asigna el mapa.
 	loadMap(mapa);		// Se carga el mapa A.
 
-	realizarS(true);		// Se hace la S a la derecha.
+	/*realizarS(true);		// Se hace la S a la derecha.
 
 	// Se planifica el camino desde la celda final.
 	planPath(finSBlancaX, finSBlancaY, pelotaX, pelotaY,
@@ -101,39 +135,20 @@ void ejecutarBlanca(){
 
 	encontrarCamino(finSBlancaX,finSBlancaY);		// Se encuentra el camino.
 
-	string file = "grid.txt";
-	TFileIOResult nIoCuadricula;
-	TFileHandle hFileHandleCuad = 0;
-	short nFileSizeCuad = 2000;			// Tamaño del fichero.
-
-	OpenWrite(hFileHandleCuad, nIoCuadricula, file, nFileSizeCuad);
-	string sString;
-
-	for(int i = 2*sizeY; i >= 0; i--) {
-		for(int j = 0; j <= 2*sizeX; j++) {
-			stringFormat(sString, "%d ", grid[j][i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-		}
-		 WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-	}
-
-	for(int j = 0; j <= 20; j++) {
-		stringFormat(sString, "%d ", pathX[j]);
-    WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}
-   WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-
-   for(int i = 0; i <= 20; i++) {
-    	stringFormat(sString, "%d ", pathY[i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-    }
-
 	recorrerCamino();		// Se recorre el camino.
+
+	setSpeed(0.0,-numPi/2);
+	wait1Msec(500);
+	setSpeed(300,0.0);
+	wait1Msec(500);
+	setSpeed(0,0);*/
 
 	//buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
-
+	// Se detecta la puerta de salida.
+	encontrarPuerta();
+	setSpeed(0,0);
 	// Se planifica hasta la puerta.
 
 	// Se recorre el camino hasta la salida.
@@ -148,7 +163,7 @@ void ejecutarNegra(){
 	string mapa = "mapaB.txt";		// Se asigna el mapa.
 	loadMap(mapa);		// Se carga el mapa B.
 
-	realizarS(false);		// Se hace la S a la derecha.
+	/*realizarS(false);		// Se hace la S a la derecha.
 
 	planPath(finSNegraX, finSNegraY, pelotaX, pelotaY,
 				inicialNegraX, inicialNegraY);
@@ -159,11 +174,19 @@ void ejecutarNegra(){
 
 	recorrerCamino();		// Se recorre el camino.
 
+	setSpeed(0.0,numPi/2);
+	wait1Msec(500);
+	setSpeed(300,0.0);
+	wait1Msec(500);
+	setSpeed(0,0);*/
+
 	//buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
-
+	encontrarPuerta();
+	setSpeed(0,0);
 	// Se planifica hasta la puerta.
+
 
 	// Se recorre el camino hasta la salida.
 

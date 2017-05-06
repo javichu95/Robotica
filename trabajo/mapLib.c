@@ -636,7 +636,7 @@ int redondearCoord(float coord){
 		resto = -resto;
 	}
 
-	if(resto >= 0.65){		// Si el resto es mayor que 0.75...
+	if(resto >= 0.55){		// Si el resto es mayor que 0.75...
 		resultado = ((((int)(div))+1)*2)*signo;		// Se asigna a la siguiente celda.
 	} else{			// Si no es mayor que 0.75...
 		resultado = ((int)(div));			// Se asigna la celda actual.
@@ -675,9 +675,8 @@ bool detectObstacle(float theta){
 
 	int distancia = 31;		// Distancia al obstáculo.
 
-	if(SensorValue[sonar] <= distancia){	// Se ha detectado el obstáculo.
 
-		float x,y, theta;			// Variables para la odometría.
+		float x,y;			// Variables para la odometría.
 		readOdometry(x,y,theta);		// Se lee la odometría.
 
 		// Se obtiene la celda en la que está el obstáculo.
@@ -686,6 +685,8 @@ bool detectObstacle(float theta){
 
 		// Se saca el vecino entre el que está el obstáculo
 		int  xconn = celdaX, yconn = celdaY;
+
+	if(connectionsMatrix[xconn][yconn] && SensorValue[sonar] <= distancia){	// Se ha detectado el obstáculo.
 
 		float angRed = redondearAng(theta);		// Se redondea el ángulo.
 		if (angRed == 0.0) {
@@ -707,7 +708,7 @@ bool detectObstacle(float theta){
 
 	}
 
-	return false;		// Se devuelve que no había obstáculo.
+	return false;		// Se devuelve que no había obstáculo desconocido.
 
 }
 
@@ -807,6 +808,7 @@ bool go(int cellX, int cellY){
 	int coordY = redondearCoord(y) + celdaOdoY;
 
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
+
 	if(cellX - coordX == 0){			// Pendiente de la recta infinito.
 		if(coordY > cellY){			// Se comprueba si la celda destino es mayor o menor.
 			angulo = theta - numPi/2;
@@ -893,6 +895,12 @@ bool go(int cellX, int cellY){
 			wait1Msec(2000);
 		}
 	}
+	readOdometry(x,y,theta);
+
+	int coordX2 = redondearCoord(x) + celdaOdoX;
+	int coordY2 = redondearCoord(y) + celdaOdoY;
+	nxtDisplayTextLine(5,"%d", coordX2);
+	nxtDisplayTextLine(6,"%d", coordY2);
 
 	return hayObstaculo;			// Se devuelve si hay obstáculo.
 

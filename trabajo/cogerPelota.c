@@ -11,7 +11,6 @@
 #include "controlVelocidad.c"
 
 // Colores a detectar.
-#define BLUE 1
 #define RED 0
 
 // Color a detectar y área del blop.
@@ -76,7 +75,7 @@ bool cogida() {
 			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
 				// Se calcula su área.
 				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-				if(area > AREA_COLOR && bt[i] < 144) {		// Se compara con el mayor área vista.
+				if(area > AREA_COLOR-200 && bt[i] < 144) {		// Se compara con el mayor área vista.
 					return true;
 				}
 
@@ -165,15 +164,16 @@ void buscarAtrapar(){
 		for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 
 			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
-				encontrada = true;		// Se indica que se ha encontrado.
 				// Se calcula su área.
 				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-				if(area > areaMayor) {		// Se compara con el mayor área vista.
-					areaMayor = area;		// Si es la mayor se guarda.
-					blopMayor = i;
-					int lastBloopIzq = bl[i];
+				if(area > 300) {
+					encontrada = true;		// Se indica que se ha encontrado.
+					if(area > areaMayor) {		// Se compara con el mayor área vista.
+						areaMayor = area;		// Si es la mayor se guarda.
+						blopMayor = i;
+						int lastBloopIzq = bl[i];
+					}
 				}
-
 			}
 
 		}
