@@ -72,17 +72,6 @@ int setSpeed(float v, float w){
 }
 
 /*
- * Modifica los valores de la odometria.
- */
-void resetOdometry(float x, float y, float theta) {
-		stopTask(updateOdometry);
-		AcquireMutex(semaphore_odometry);
-		set_position(robot_odometry, x, y, theta);
-		ReleaseMutex(semaphore_odometry);
-		startTask(updateOdometry);
-}
-
-/*
 * Función que va actualizando la odometría para saber en todo momento donde
 * está el robot.
 */
@@ -153,4 +142,15 @@ task updateOdometry(){
 
   }
 
+}
+
+/*
+ * Modifica los valores de la odometria.
+ */
+void resetOdometry(float x, float y, float theta) {
+		stopTask(updateOdometry);
+		AcquireMutex(semaphore_odometry);
+		set_position(robot_odometry, x, y, theta);
+		ReleaseMutex(semaphore_odometry);
+		startTask(updateOdometry);
 }

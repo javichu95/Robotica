@@ -107,12 +107,8 @@ void encontrarPuerta() {
 
 			for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 				if (bc[i] == COLOR_PUERTA){			// Si el color coincide...
-				// Se calcula su área.
-				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-				if(area > 400){
 					encontrada = true;
 					indice = i;
-				}
 				}
 			}
 			if(!encontrada) {
@@ -121,6 +117,41 @@ void encontrarPuerta() {
   	}
   	float error = centroPelota(bl, br, bt, bb,indice);
 
+}
+
+/*
+ *
+ */
+void salir() {
+	float v = 150.0;								// Velocidad lineal del robot.
+	int _nblobs = 0;								// Número de blops detectados.
+	int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
+	init_camera(cam);								// Se inicializa la cámara.
+	int indice = 0;									//Indice del blop encontrado.
+	while(sensorValue[sonar] <= distancia) {		//Mientras no encuentre obstaculo.
+			get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
+
+			for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
+				if (bc[i] == COLOR_PUERTA){			// Si el color coincide...
+					indice = i;
+				}
+			}
+			float error = centroPelota(bl, br, bt, bb, indice);	// Centra la el blop del papel.
+			float angular = error*0.002;			// Se asigna la velocidad angular.
+			setSpeed(v,angular);
+	}
+	float w = numPi/2;			//Velocidad angular para los giros.
+	setSpeed(0,-w);					//Se gira -90 grados.
+	girarHasta(w);
+
+	while(sensorValue[sonar] <= distancia) {	//Mientras no encuentre obstaculo avanza en linea recta.
+		setSpeed(v,0);
+	}
+	setSpeed(0,w);		//Gira 90 grados.
+	girarHasta(w);
+	setSpeed(v,0);		//Avanza para salir del circuito.
+	wait1Msec(1000);
+	setSpeed(0,0);
 }
 
 /*
@@ -157,6 +188,7 @@ void ejecutarBlanca(){
 	// Se planifica hasta la puerta.
 
 	// Se recorre el camino hasta la salida.
+	salir();
 
 }
 
@@ -195,7 +227,7 @@ void ejecutarNegra(){
 
 
 	// Se recorre el camino hasta la salida.
-
+	salir();
 }
 
 
