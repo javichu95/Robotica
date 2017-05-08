@@ -1,5 +1,6 @@
 #pragma config(Sensor, S1,     sonar,          sensorSONAR)
 #pragma config(Sensor, S2,     cam,            sensorI2CCustomFastSkipStates)
+#pragma config(Sensor, S3,     gyro,           sensorAnalogInactive)
 #pragma config(Sensor, S4,     lightSensor,    sensorLightActive)
 #pragma config(Motor,  motorB,          r_motor,       tmotorNXT, PIDControl)
 #pragma config(Motor,  motorC,          l_motor,       tmotorNXT, PIDControl)
@@ -59,6 +60,7 @@ void realizarS(bool dir){
 		w = numPi/2.0;			// Se asigna la velocidad angular.
 		setSpeed(0,w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
 		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		setSpeed(0,0);
 		/*do {
 			readOdometry(x,y,th);
 			nxtDisplayTextLine(1,"%f",th);
@@ -85,6 +87,7 @@ void realizarS(bool dir){
 		w = numPi/2.0;			// Se asigna la velocidad angular.
 		setSpeed(0,-w);	// Velocidad lineal a 0 para que el robot gire sobre si mismo.
 		wait1Msec(abs(numPi/2.0/w)*1000.0);
+		setSpeed(0,0);
 		/*do {
 			readOdometry(x,y,th);
 			nxtDisplayTextLine(1,"%f",th);
@@ -101,7 +104,7 @@ void encontrarPuerta() {
 		int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
 		int indice = 0;
 		init_camera(cam);								// Se inicializa la cámara.
-		nxtDisplayTextLine(4,"ENTROOOOOOOO");
+		setSpeed(0,numPi/2);
     while(!encontrada) {
     	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
 
@@ -115,12 +118,11 @@ void encontrarPuerta() {
 				buscar(false);
 			}
   	}
-  	float error = centroPelota(bl, br, bt, bb,indice);
-
+		setSpeed(0,0);
 }
 
 /*
- *
+ * Sale del circuito por la puerta correspondiente.
  */
 void salir() {
 	float v = 150.0;								// Velocidad lineal del robot.
@@ -141,14 +143,12 @@ void salir() {
 			setSpeed(v,angular);
 	}
 	float w = numPi/2;			//Velocidad angular para los giros.
-	setSpeed(0,-w);					//Se gira -90 grados.
-	girarHasta(w);
+	girarHasta(w,-w);				//Se gira -90 grados.
 
 	while(sensorValue[sonar] <= distancia) {	//Mientras no encuentre obstaculo avanza en linea recta.
 		setSpeed(v,0);
 	}
-	setSpeed(0,w);		//Gira 90 grados.
-	girarHasta(w);
+	girarHasta(w, w);		//Gira 90 grados.
 	setSpeed(v,0);		//Avanza para salir del circuito.
 	wait1Msec(1000);
 	setSpeed(0,0);
@@ -163,7 +163,7 @@ void ejecutarBlanca(){
 	string mapa = "mapaA.txt";		// Se asigna el mapa.
 	loadMap(mapa);		// Se carga el mapa A.
 
-	/*realizarS(true);		// Se hace la S a la derecha.
+	realizarS(true);		// Se hace la S a la derecha.
 
 	// Se planifica el camino desde la celda final.
 	planPath(finSBlancaX, finSBlancaY, pelotaX, pelotaY,
@@ -177,9 +177,9 @@ void ejecutarBlanca(){
 	wait1Msec(500);
 	setSpeed(300,0.0);
 	wait1Msec(500);
-	setSpeed(0,0);*/
+	setSpeed(0,0);
 
-	//buscarAtrapar();		// Se busca la pelota y se atrapa.
+	buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
 	// Se detecta la puerta de salida.
@@ -201,7 +201,7 @@ void ejecutarNegra(){
 	string mapa = "mapaB.txt";		// Se asigna el mapa.
 	loadMap(mapa);		// Se carga el mapa B.
 
-	/*realizarS(false);		// Se hace la S a la derecha.
+	realizarS(false);		// Se hace la S a la derecha.
 
 	planPath(finSNegraX, finSNegraY, pelotaX, pelotaY,
 				inicialNegraX, inicialNegraY);
@@ -212,22 +212,21 @@ void ejecutarNegra(){
 
 	recorrerCamino();		// Se recorre el camino.
 
-	setSpeed(0.0,numPi/2);
+	/*setSpeed(0.0,numPi/2);
 	wait1Msec(500);
 	setSpeed(300,0.0);
 	wait1Msec(500);
-	setSpeed(0,0);*/
+	setSpeed(0,0);
 
-	//buscarAtrapar();		// Se busca la pelota y se atrapa.
+	buscarAtrapar();		// Se busca la pelota y se atrapa.
 
 	// Se detecta la puerta de salida.
 	encontrarPuerta();
-	setSpeed(0,0);
 	// Se planifica hasta la puerta.
 
 
 	// Se recorre el camino hasta la salida.
-	salir();
+	salir();*/
 }
 
 
@@ -283,7 +282,7 @@ task main(){
 
 
 	// Se inicializa la odometría y la matriz de conexiones.
-	inicializarGyro();
+
 	initConnections();		// Se inicializa la matriz de conexiones.
 
 	startTask(updateOdometry);		// Se inicializa la tarea de odometría.

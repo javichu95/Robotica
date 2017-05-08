@@ -14,7 +14,7 @@ float L = 114.0; // Longitud del eje.
 string sFileName = "odometria.txt";     // Nombre del fichero.
 TFileIOResult nIoResult;
 TFileHandle hFileHandle = 0;
-short nFileSize = 20000;			// Tamaño del fichero.
+short nFileSize = 10000;			// Tamaño del fichero.
 
 // Parámetros para la odometría.
 TPosition robot_odometry;       // Posición para odometría.
@@ -148,9 +148,9 @@ task updateOdometry(){
  * Modifica los valores de la odometria.
  */
 void resetOdometry(float x, float y, float theta) {
-		stopTask(updateOdometry);
+		//stopTask(updateOdometry);
 		AcquireMutex(semaphore_odometry);
 		set_position(robot_odometry, x, y, theta);
 		ReleaseMutex(semaphore_odometry);
-		startTask(updateOdometry);
+		//startTask(updateOdometry);
 }

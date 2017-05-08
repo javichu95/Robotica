@@ -724,19 +724,20 @@ void girar(float actual, float angGiro, float w) {
 
 	if(angGiro == numPi/2) {			// Si el giro es de PI/2.
 		if(actual == -numPi/2) {		// Se mira el ángulo en el que está.
-			setSpeed(0,w);			// Se asigna la velocidad.
-			/*readOdometry(x,y,theta);		// Se lee la odometría.
+			girarHasta(angGiro,w);			// Se asigna la velocidad.
+			/*setSpeed(0,w);
+			readOdometry(x,y,theta);		// Se lee la odometría.
 			while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 			}*/
 		} else if(actual == numPi) {		// Se mira el ángulo en el que está.
-				setSpeed(0,w);			// Se asigna la velocidad.
+				girarHasta(angGiro,w);			// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(abs(theta) > numPi/2) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 			}*/
 		} else {			// Se mira el ángulo en el que está.
-			setSpeed(0,w);			// Se asigna la velocidad.
+			girarHasta(angGiro,w);			// Se asigna la velocidad.
 			/*readOdometry(x,y,theta);		// Se lee la odometría.
 			// Se comprueba si se ha llegado al destino.
 			while(theta > actual-numPi/2 && theta < actual + numPi/2) {
@@ -745,40 +746,40 @@ void girar(float actual, float angGiro, float w) {
 		}
 	} else {			// Si el giro es PI...
 		if(actual == -numPi/2) {			// Si el eje es -PI/2...
-			setSpeed(0,w);			// Se asigna la velocidad.
+			girarHasta(angGiro,w);			// Se asigna la velocidad.
 			/*readOdometry(x,y,theta);		// Se lee la odometría.
 			while(theta < numPi / 2) {		// Se comprueba si se ha llegado al destino.
 				readOdometry(x,y,theta);
 			}*/
 		} else if(actual == numPi) {		// Si el eje es PI...
 			if(theta < 0) {		// Se comprueba la dirección de giro.
-				setSpeed(0,w);			// Se asigna la velocidad.
+				girarHasta(angGiro,w);			// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 				}*/
 			} else {			// Se comprueba la dirección de giro.
-				setSpeed(0,-w);			// Se asigna la velocidad.
+				girarHasta(angGiro,-w);		// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 				}*/
 			}
 		} else if(actual == numPi / 2) { // Si el eje es PI/2...
-				setSpeed(0,-w);			// Se asigna la velocidad.
+				girarHasta(angGiro,-w);			// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > -numPi/2) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 				}*/
 		} else {			// Si el eje es 0...
 			if(theta < 0) {		// Se comprueba la dirección de giro.
-				setSpeed(0,-w);			// Se asigna la velocidad.
+				girarHasta(angGiro,-w);			// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta < 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
 				}*/
 			} else {		// Se comprueba la dirección de giro.
-				setSpeed(0,w);			// Se asigna la velocidad.
+				girarHasta(angGiro,w);			// Se asigna la velocidad.
 				/*readOdometry(x,y,theta);		// Se lee la odometría.
 				while(theta > 0) {		// Se comprueba si se ha llegado al destino.
 					readOdometry(x,y,theta);
@@ -786,8 +787,6 @@ void girar(float actual, float angGiro, float w) {
 			}
 		}
 	}
-	girarHasta(angGiro);
-	setSpeed(0,0);		// Se para la velocidad.
 
 }
 
@@ -795,25 +794,38 @@ void girar(float actual, float angGiro, float w) {
  * Detecta la tira blanca para resetear la odometria.
  */
 void detectarTira() {
-		float x, y, th;
-		setSpeed(100,0);			//Se avanza hasta detectar la tira.
-		while(sensorValue(lightSensor) > valorColor){}
-		setSpeed(0,0);
 
-		//Se actualiza la odometria con los datos obtenidos.
+		float x, y, th, recorridoX;
 		readOdometry(x,y,th);
-		float posicionActualX = (x-celdaOdoX)*sizeCell;
-		posicionActualX = posicionActualX - (sizeCell/2 * posicionActualX/abs(posicionActualX));
-		resetOdometry(posicionActualX, y, th);
-
-		//Se avanza media baldosa para que el robot este centrado.
-		readOdometry(x, y, th);
-		float recorridoX = x;
-		setSpeed(150,0);
-		while(x < recorridoX + sizeCell/2 && x > recorridoX -sizeCell/2) {
-			readOdometry(x, y ,th);
+		recorridoX = x;
+		setSpeed(100,0);			//Se avanza hasta detectar la tira.
+		while(sensorValue(lightSensor) > valorColor &&
+				(x <= recorridoX + sizeCell && x >= recorridoX - sizeCell)){
+			readOdometry(x,y,th);
 		}
 		setSpeed(0,0);
+		bool detectada = true;
+		if(x > recorridoX + sizeCell && x < recorridoX - sizeCell) {
+				detectada = false;
+		}
+		if(detectada) {
+			nxtDisplayTextLine(1,"TIRAAAAA");
+			wait1Msec(5000);
+				//Se actualiza la odometria con los datos obtenidos.
+			readOdometry(x,y,th);
+			float posicionActualX = (x-celdaOdoX)*sizeCell;
+			posicionActualX = posicionActualX - (sizeCell/2 * posicionActualX/abs(posicionActualX));
+			resetOdometry(posicionActualX, y, th);
+
+			//Se avanza media baldosa para que el robot este centrado.
+			readOdometry(x, y, th);
+			float recorridoX = x;
+			setSpeed(150,0);
+			while(x <= recorridoX + sizeCell/2 && x >= recorridoX - sizeCell/2) {
+				readOdometry(x, y ,th);
+			}
+			setSpeed(0,0);
+		}
 }
 
 
@@ -836,6 +848,10 @@ bool go(int cellX, int cellY){
 	int coordX = redondearCoord(x) + celdaOdoX;
 	int coordY = redondearCoord(y) + celdaOdoY;
 
+	displayTextLine(4,"%f",x);
+	displayTextLine(5,"%f",y);
+	displayTextLine(6,"%f",theta);
+
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
 
 	if(cellX - coordX == 0){			// Pendiente de la recta infinito.
@@ -856,9 +872,9 @@ bool go(int cellX, int cellY){
 	angulo = normalizarAngulo(angulo);		// Se normaliza el ángulo.
 
 	if(angulo == numPi){		// Si es PI, se va recto.
-		if(cellX == xTiraBlanca) {
+		/*if(cellX == xTiraBlanca) {
 			detectarTira();
-		} else {
+		} else {*/
 				setSpeed(v,0);			// Se asigna la velocidad lineal.
 				readOdometry(x,y,theta);		// Se lee la odometría.
 
@@ -892,9 +908,7 @@ bool go(int cellX, int cellY){
 				hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
 				setSpeed(0,0);
-		}
-
-		wait1Msec(2000);
+		//}
 
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
@@ -921,20 +935,18 @@ bool go(int cellX, int cellY){
 		hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
 		setSpeed(0,0);
-		wait1Msec(2000);
 
 		if(!hayObstaculo){			// Si no hay un obstáculo...
 			hayObstaculo = go(cellX, cellY);		// Se realiza el movimiento lineal hasta la celda objetivo.
 			setSpeed(0,0);
-			wait1Msec(2000);
 		}
 	}
+
 	readOdometry(x,y,theta);
 
-	int coordX2 = redondearCoord(x) + celdaOdoX;
-	int coordY2 = redondearCoord(y) + celdaOdoY;
-	nxtDisplayTextLine(5,"%d", coordX2);
-	nxtDisplayTextLine(6,"%d", coordY2);
+	displayTextLine(4,"%f",x);
+	displayTextLine(5,"%f",y);
+	displayTextLine(6,"%f",theta);
 
 	return hayObstaculo;			// Se devuelve si hay obstáculo.
 

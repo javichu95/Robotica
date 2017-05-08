@@ -8,7 +8,6 @@
 #include "nxtcamlib.c"
 
 // Librerías para el control de motores.
-#include "controlVelocidad.c"
 #include "gyro.c"
 
 // Colores a detectar.
