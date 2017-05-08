@@ -130,7 +130,7 @@ void salir() {
 	int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
 	init_camera(cam);								// Se inicializa la cámara.
 	int indice = 0;									//Indice del blop encontrado.
-	while(sensorValue[sonar] <= distancia) {		//Mientras no encuentre obstaculo.
+	while(SensorValue[sonar] <= distancia) {		//Mientras no encuentre obstaculo.
 			get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
 
 			for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
@@ -145,7 +145,7 @@ void salir() {
 	float w = numPi/2;			//Velocidad angular para los giros.
 	girarHasta(w,-w);				//Se gira -90 grados.
 
-	while(sensorValue[sonar] <= distancia) {	//Mientras no encuentre obstaculo avanza en linea recta.
+	while(SensorValue[sonar] <= distancia) {	//Mientras no encuentre obstaculo avanza en linea recta.
 		setSpeed(v,0);
 	}
 	girarHasta(w, w);		//Gira 90 grados.
@@ -300,30 +300,5 @@ task main(){
 	}
 
 	stopTask(updateOdometry);			// Se para la tarea de odometría.
-
-}
-
-/*
-*	Método para lanzar en paralelo la tarea de resetear odometría con pared
-* de color o X en el suelo.
-*/
-task resetOdometria(){
-
-	bool cuadradoDetec = false;
-	bool xDetec = false;
-
-	while(!cuadradoDetec){
-
-		cuadradoDetec = true;		// Se indica que se ha detectado.
-		// Se resetea odometría.
-
-	}
-
-	while(!xDetec){
-
-		xDetec = true;
-		// Se resetea odometría.
-
-	}
 
 }

@@ -31,12 +31,10 @@ void girarHasta(float angulo, float w) {
 	nxtDisplayTextLine(3,"%f",angulo);
 	float girado = abs(grad2rad(HTGYROreadRot(gyro)*(time1[T1]/1000.0)));
 	while(girado <= angulo+eps) {
-		nxtDisplayTextLine(1,"%f",time1[T1]);
-		nxtDisplayTextLine(2,"%f",abs(grad2rad(HTGYROreadRot(gyro)*(time1[T1]/1000.0))));
 		girado = abs(grad2rad(HTGYROreadRot(gyro)*(time1[T1]/1000.0)));
 	}
 	setSpeed(0,0);
-	float rot = normalizarAngulo((girado*w/abs(w)) + theta);
+	float rot = normalizarAngulo((girado*w/abs(w)) - eps + theta);
 	readOdometry(x,y,theta);
 	resetOdometry(x,y,rot);
 	/*
