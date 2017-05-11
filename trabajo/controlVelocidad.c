@@ -37,6 +37,18 @@ void readOdometry(float &x, float &y, float &theta) {
 }
 
 /*
+* Función que lee la posición del robot de la odometría sin utilizar semaforo.
+*/
+void readOdometryWS(float &x, float &y, float &theta) {
+
+  // Se leen las variables.
+	x = robot_odometry.x;
+	y = robot_odometry.y;
+	theta = robot_odometry.th;
+
+}
+
+/*
 * Función que calcula la velocidad de cada rueda y se le asigna a los motores.
 */
 int setSpeed(float v, float w){
@@ -59,11 +71,6 @@ int setSpeed(float v, float w){
 
 	motor[motorB] = motorPowerRight;
 	motor[motorC] = motorPowerLeft;
-
-	// Se muestran las velocidades por pantalla.
-	/*nxtDisplayTextLine(2, "POTENCIAS");
-  nxtDisplayTextLine(3, "derecho: %2.2f", motor[motorB]);
-  nxtDisplayTextLine(4, "izquierdo: %2.2f", motor[motorC]);*/
 
 	releaseCPU();			// Se libera la CPU.
 
@@ -92,7 +99,7 @@ task updateOdometry(){
 
 	while (true){       // Bucle infinito que va actualizando.
 
-    timeAux=nPgmTime;		// Se lee el tiempo actual.
+    timeAux = nPgmTime;		// Se lee el tiempo actual.
     hogCPU();     // Se bloquea la CPU.
 
     // Se leen los tacómetros.
@@ -111,7 +118,8 @@ task updateOdometry(){
     dS = (dSl + dSr)/2.0;						// Cuanto ha avanzado el robot en el ciclo.
     incTheta = (dSr - dSl)/L;				// Angulo girado por el robot en el ciclo.
 
-    readOdometry(x,y,theta);			// Se lee la odometría.
+    AcquireMutex(semaphore_odometry);     // Se bloquea con el semáforo.
+    readOdometryWS(x,y,theta);			// Se lee la odometría.
     dx = dS * cos(theta + incTheta/2.0);      // Aumento coordenada x.
     dy = dS * sin(theta + incTheta/2.0);      // Aumento coordenada y.
 
@@ -121,8 +129,6 @@ task updateOdometry(){
     // Aumento en el eje x e y.
     x = x + dx;
     y = y + dy;
-
-    AcquireMutex(semaphore_odometry);     // Se bloquea con el semáforo.
     set_position(robot_odometry, x, y, theta);		 // Se fija la posición.
     ReleaseMutex(semaphore_odometry);     // Se librea con el semáforo.
 
@@ -145,12 +151,12 @@ task updateOdometry(){
 }
 
 /*
- * Modifica los valores de la odometria.
+ * Método que modifica los valores de la odometria.
  */
 void resetOdometry(float x, float y, float theta) {
-		//stopTask(updateOdometry);
+
 		AcquireMutex(semaphore_odometry);
 		set_position(robot_odometry, x, y, theta);
 		ReleaseMutex(semaphore_odometry);
-		//startTask(updateOdometry);
+
 }

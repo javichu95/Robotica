@@ -10,14 +10,7 @@
 #define MAX_X 10
 #define MAX_Y 10
 
-// Variables para dibujar la cuadrícula.
-TFileIOResult nIoCuadricula;
-TFileHandle hFileHandleCuad = 0;
-short nFileSizeCuad = 2000;			// Tamaño del fichero.
-string cuadricula = "grid.txt";     // Nombre del fichero.
-
-
-int distancia = 31;		// Distancia al obstáculo.
+int distancia = 34;		// Distancia al obstáculo.
 
 // Variables globales de las dimensiones del mapa
 int sizeX;			// Tamaño en el eje X.
@@ -32,7 +25,11 @@ int celdaYFin;
 int celdaOdoX;
 int celdaOdoY;
 
-//Indica en que coordenada se la tira blanca.
+// Frontera que indica las posiciones de la cuadricula a actualizar.
+int fronteraX[MAX_X*MAX_Y];
+int fronteraY[MAX_X*MAX_Y];
+
+// Indica en que coordenada se la tira blanca.
 int xTiraBlanca = 0;
 
 // Booleano para indicar que es el camino inicial.
@@ -58,72 +55,6 @@ void initConnections(){
       connectionsMatrix[i][j]=false;
     }
   }
-
-}
-
-/*
-* Método que dada una celda y su vecino da con la coordenada del punto
-* en la matriz de conexiones.
-*/
-void cell2connCoord(int cellX, int cellY, int numNeigh, int & connX, int & connY){
-
-  connX=2*cellX+1;
-  connY=2*cellY+1;
-  switch(numNeigh){
-    case 0: connY++; break;
-    case 1: connY++; connX++; break;
-    case 2: connX++;break;
-    case 3: connY--; connX++; break;
-    case 4: connY--; break;
-    case 5: connY--; connX--; break;
-    case 6: connX--; break;
-    case 7: connY++; connX--; break;
-  }
-
-}
-
-/*
- * Marca una cierta celda como conectada a otra.
- */
-void setConnection(int cellX, int cellY, int numNeigh){
-
-  int connX, connY; // Coordenadas en la matriz de conexiones.
-
-  // Pasa de coordenadas de la celda a coordenadas de la matriz de conexiones.
-  cell2connCoord(cellX, cellY, numNeigh, connX, connY);
-
-  // Marca la celda como conectada.
-  connectionsMatrix[connX][connY]=true;
-
-}
-
-/*
- * Método que borra la conexión entre dos celdas.
- */
-void deleteConnection(int cellX, int cellY, int numNeigh){
-
-  int connX, connY; // Coordenadas en la matriz de conexiones.
-
-  // Pasa de coordenadas de la celda a coordenadas de la matriz de conexiones.
-  cell2connCoord(cellX, cellY, numNeigh, connX, connY);
-
-  // Marca la celda como no conectada.
-  connectionsMatrix[connX][connY]=false;
-
-}
-
-/*
- * Método que devuelve true si y sólo si dos celdas dadas están conectadas.
- */
-bool isConnected(int cellX, int cellY, int numNeigh){
-
-   int connX, connY; // Coordenadas en la matriz de conexiones.
-
- 	// Pasa de coordenadas de la celda a coordenadas de la matriz de conexiones.
-  cell2connCoord(cellX, cellY, numNeigh, connX, connY);
-
-  // Devuelve si la celda está conectada con la otra o no.
-  return(connectionsMatrix[connX][connY]);
 
 }
 
@@ -189,10 +120,6 @@ bool readLineHeader(TFileHandle hFileHandle,TFileIOResult nIoResult, int & dimX,
      dimX = numbersRead[0];
      dimY = numbersRead[1];
      dimCell = numbersRead[2];
-
-     /*nxtDisplayTextLine(3, "%d %d ", dimX, dimY);
-     nxtDisplayTextLine(4, "%d ", dimCell);
-     wait10Msec(300);*/
 
      return endfile;
 
@@ -265,7 +192,7 @@ bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRo
      }
 
      // from char to string
-     StringFromChars(linestring,linechar);
+     stringFromChars(linestring,linechar);
      /*if (numbersRead[indNum]!=num && num!=0){
         numbersRead[indNum]=num;
      }*/
@@ -287,7 +214,6 @@ bool readNextLine(TFileHandle hFileHandle,TFileIOResult & nIoResult, int & mapRo
 bool loadMap(string mapFileName){
 
      bool loadingOk=false;
-     int dimConectionX,dimConectionY;
      int mapRow; // last row from connection matrix
 
      string line="";
@@ -336,7 +262,7 @@ void drawMap(){
 
   int i,j,cx,cy;
 
-  eraseDisplay(); // L_B: (0,0); T_T: (99,63)
+  //eraseDisplay(); // L_B: (0,0); T_T: (99,63)
   //nxtDrawRect(_l, _t, _r, _b);
   pixPerX=100/sizeX;
   pixPerY=64/sizeY;
@@ -373,28 +299,47 @@ void drawMap(){
 }
 
 /*
- * Método que convierte las coordenadas del robot en odometría en coordenadas
- * de la celda.
- */
-void pos2cell(float x_mm, float y_mm, int & x_cell, int & y_cell){
+* Método que redondea las coordenadas por si el robot se ha desviado
+* y devuelve la celda relativa en la que está.
+*/
+int redondearCoord(float coord){
 
-  x_cell =  (int) x_mm/sizeCell;
+	float div = coord / sizeCell;		// Se obtiene la celda en la que está.
+	float resto = div - (int)(div);	// Se saca el resto de la división.
+	int signo = 1, resultado = 0;		// Variables para el signo y resultado.
 
-  y_cell = (int) y_mm/sizeCell;
+	if(div < 0){		// Se comprueba si es negativo.
+		signo = -1;		// Se saca el signo.
+		div = -div;
+	}
+
+	if(resto < 0){	// Se comprueba si es negativo.
+		resto = -resto;
+	}
+
+	if(resto >= 0.55){		// Si el resto es mayor que 0.75...
+		resultado = ((((int)(div))+1)*2)*signo;		// Se asigna a la siguiente celda.
+	} else{			// Si no es mayor que 0.75...
+		resultado = ((int)(div));			// Se asigna la celda actual.
+		resultado = resultado*signo*2;
+	}
+
+	return resultado;			// Se devuelve el resultado.
 
 }
 
 /*
  * Método que dibuja el robot en la pantalla.
  */
-void drawRobot(float x_mm, float y_mm, float ang_rad){
+void drawRobot(float x_mm, float y_mm, float ang_rad, int inix, int iniy){
 
   int cellx,celly;
   int pixX,pixY;
   float ang_grad;
   int th;
 
-  pos2cell(x_mm, y_mm, cellx,celly);
+  cellx = (redondearCoord(x_mm) + inix)/2;
+  celly = (redondearCoord(y_mm) + iniy)/2;
 
   pixX=cellx*pixPerX+pixPerX/2;
   pixY=celly*pixPerY+pixPerY/2;
@@ -453,37 +398,33 @@ void iniciarGrid(){
  * Método que va asignando costes iterativamente a la cuadrícula.
  */
 void planPath(int x_end, int y_end) {
-	//Frontera que indica las posiciones de la cuadricula a actualizar.
-	int fronteraX[MAX_X*MAX_Y];
-	int fronteraY[MAX_X*MAX_Y];
 
-	//Se inicializan valores de la frontera.
+	// Se inicializan valores de la frontera.
 	for(int i = 0; i < MAX_X*MAX_Y; i++) {
 		fronteraX[i] = -1;
 		fronteraY[i] = -1;
 	}
 
-	int leer = 0, escribir = 0;	//Indices de lectura y escritura en la frontera.
-	int numElementos = 0;		//Elementos que quedan por leer.
-	int coste = 0;				//Coste a introducir.
-	int x, y;					//Indices de la cuadricula.
-	numElementos++;
+	int leer = 0, escribir = 0;	 // Índices de lectura y escritura en la frontera.
+	int numElementos = 0;		// Elementos que quedan por leer.
+	int coste = 0;				// Coste a introducir.
+	int x, y;					// Índices de la cuadricula.
+	numElementos++;		// Se aumenta el número de elementos.
 
-	//Se introducen las celdas objetivo.
+	// Se introducen las celdas objetivo.
 	fronteraX[escribir] = x_end;
 	fronteraY[escribir] = y_end;
-	grid[x_end][y_end] = 0;		//Se asigna el coste.
-	while(numElementos != 0) {		//Mientras queden elementos por leer.
-		x = fronteraX[leer];		//Se lee la frontera.
+	grid[x_end][y_end] = 0;		// Se asigna el coste.
+	while(numElementos != 0) {		// Mientras queden elementos por leer.
+		x = fronteraX[leer];		// Se lee la frontera.
 		y = fronteraY[leer];
 
-		leer++;					//Se actualiza el indice para la siguiente iteracion.
-		numElementos--;			//Se resta un elemento por leer.
+		leer++;					// Se actualiza el indice para la siguiente iteracion.
+		numElementos--;			// Se resta un elemento por leer.
 
-		coste = grid[x][y]+1;
+		coste = grid[x][y]+1;		// Se actualiza el coste.
 
-
-		//Se añaden los vecinos que se deba añadir.
+		// Se añaden los vecinos que se deba añadir.
 		if(grid[x+1][y]!=-1 && grid[x+2][y] < 0) {
 			escribir++;
 			numElementos++;
@@ -516,6 +457,7 @@ void planPath(int x_end, int y_end) {
 			grid[x][y-2] = coste;
 		}
 	}
+	drawMap();
 }
 
 /*
@@ -591,65 +533,8 @@ void encontrarCamino(int x_ini, int y_ini){
 */
 void rePlanPath(int celdaX, int celdaY){
 
-	//drawMap();
-
 	planPath(celdaX, celdaY, celdaXFin, celdaYFin, celdaOdoX, celdaOdoY);			// Se replanifica la ruta.
 	encontrarCamino(celdaX, celdaY);		// Volver a encontrar el camino.
-
-	//drawMap();
-
-	// Se escribe la nueva ruta en el fichero.
-/*	OpenWrite(hFileHandleCuad, nIoCuadricula, cuadricula, nFileSizeCuad);
-
-	string sString;
-	for(int i = 2*sizeY; i >= 0; i--) {
-		for(int j = 0; j <= 2*sizeX; j++) {
-			stringFormat(sString, "%d ", grid[j][i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-		}
-    WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-	}
-
-	for(int j = 0; j <= 20; j++) {
-		stringFormat(sString, "%d ", pathX[j]);
-    WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}
-   WriteText(hFileHandleCuad, nIoCuadricula, "\n");
-
-   for(int i = 0; i <= 20; i++) {
-    	stringFormat(sString, "%d ", pathY[i]);
-    	WriteText(hFileHandleCuad, nIoCuadricula, sString);
-	}*/
-
-}
-
-/*
-* Método que redondea las coordenadas por si el robot se ha desviado
-* y devuelve la celda relativa en la que está.
-*/
-int redondearCoord(float coord){
-
-	float div = coord / sizeCell;		// Se obtiene la celda en la que está.
-	float resto = div - (int)(div);	// Se saca el resto de la división.
-	int signo = 1, resultado = 0;		// Variables para el signo y resultado.
-
-	if(div < 0){		// Se comprueba si es negativo.
-		signo = -1;		// Se saca el signo.
-		div = -div;
-	}
-
-	if(resto < 0){	// Se comprueba si es negativo.
-		resto = -resto;
-	}
-
-	if(resto >= 0.55){		// Si el resto es mayor que 0.75...
-		resultado = ((((int)(div))+1)*2)*signo;		// Se asigna a la siguiente celda.
-	} else{			// Si no es mayor que 0.75...
-		resultado = ((int)(div));			// Se asigna la celda actual.
-		resultado = resultado*signo*2;
-	}
-
-	return resultado;			// Se devuelve el resultado.
 
 }
 
@@ -679,28 +564,28 @@ float redondearAng(float angulo){
 */
 bool detectObstacle(float theta){
 
-		float x,y;			// Variables para la odometría.
-		readOdometry(x,y,theta);		// Se lee la odometría.
+	float x,y;			// Variables para la odometría.
+	readOdometry(x,y,theta);		// Se lee la odometría.
 
-		// Se obtiene la celda en la que está el obstáculo.
-		int celdaX = redondearCoord(x) + celdaOdoX;
-		int celdaY = redondearCoord(y) + celdaOdoY;
+	// Se obtiene la celda en la que está el obstáculo.
+	int celdaX = redondearCoord(x) + celdaOdoX;
+	int celdaY = redondearCoord(y) + celdaOdoY;
 
-		// Se saca el vecino entre el que está el obstáculo
-		int  xconn = celdaX, yconn = celdaY;
+	// Se saca el vecino entre el que está el obstáculo
+	int  xconn = celdaX, yconn = celdaY;
+
+	float angRed = redondearAng(theta);		// Se redondea el ángulo.
+	if (angRed == 0.0) {
+		xconn++;
+	} else if (angRed == numPi/2) {
+		yconn++;
+	} else if(angRed == numPi) {
+		xconn--;
+	} else {
+		yconn--;
+	}
 
 	if(connectionsMatrix[xconn][yconn] && SensorValue[sonar] <= distancia){	// Se ha detectado el obstáculo.
-
-		float angRed = redondearAng(theta);		// Se redondea el ángulo.
-		if (angRed == 0.0) {
-			xconn++;
-		} else if (angRed == numPi/2) {
-			yconn++;
-		} else if(angRed == numPi) {
-			xconn--;
-		} else {
-			yconn--;
-		}
 
 		// Se marca la conexión como cerrada.
 		connectionsMatrix[xconn][yconn] = false;
@@ -731,7 +616,9 @@ void girar(float actual, float angGiro, float w) {
 		} else {			// Se mira el ángulo en el que está.
 			girarHasta(angGiro,w);			// Se asigna la velocidad.
 		}
-	} else {			// Si el giro es PI...
+	}
+
+	else {			// Si el giro es PI...
 		if(actual == -numPi/2) {			// Si el eje es -PI/2...
 			girarHasta(angGiro,w);			// Se asigna la velocidad.
 		} else if(actual == numPi) {		// Si el eje es PI...
@@ -758,31 +645,38 @@ void girar(float actual, float angGiro, float w) {
  */
 void detectarTira() {
 
-		float x, y, th, recorridoX;
-		readOdometry(x,y,th);
-		recorridoX = x;
+		float x, y, th;		// Variables para la odometría.
+		float recorridoX;		// Variable para lo recorrido.
+
+		readOdometry(x,y,th);		// Se lee la odometría.
+		recorridoX = x;			// Se asigna el valor de lo recorrido.
+
 		setSpeed(100,0);			//Se avanza hasta detectar la tira.
-		while(SensorValue(lightSensor) > valorColor &&
+		while(SensorValue(lightSensor) < valorColor &&
 				(x <= recorridoX + sizeCell && x >= recorridoX - sizeCell)){
 			readOdometry(x,y,th);
 		}
-		setSpeed(0,0);
+
+		setSpeed(0,0);		// Se para la velocidad.
 		bool detectada = true;
-		if(x > recorridoX + sizeCell && x < recorridoX - sizeCell) {
+		if(x > recorridoX + sizeCell || x < recorridoX - sizeCell) {
 				detectada = false;
 		}
+
 		if(detectada) {
-			nxtDisplayTextLine(1,"TIRAAAAA");
-			wait1Msec(5000);
 				//Se actualiza la odometria con los datos obtenidos.
 			readOdometry(x,y,th);
-			float posicionActualX = (x-celdaOdoX)*sizeCell;
-			posicionActualX = posicionActualX - (sizeCell/2 * posicionActualX/abs(posicionActualX));
-			resetOdometry(posicionActualX, y, th);
+			float posActual = 0.0;
+			if(celdaOdoX == 3){
+				posActual = 600;
+			} else{
+				posActual = -600;
+			}
+			resetOdometry(posActual, y, th);
 
 			//Se avanza media baldosa para que el robot este centrado.
 			readOdometry(x, y, th);
-			float recorridoX = x;
+			recorridoX = x;
 			setSpeed(150,0);
 			while(x <= recorridoX + sizeCell/2 && x >= recorridoX - sizeCell/2) {
 				readOdometry(x, y ,th);
@@ -811,10 +705,6 @@ bool go(int cellX, int cellY){
 	int coordX = redondearCoord(x) + celdaOdoX;
 	int coordY = redondearCoord(y) + celdaOdoY;
 
-	displayTextLine(4,"%f",x);
-	displayTextLine(5,"%f",y);
-	displayTextLine(6,"%f",theta);
-
 	theta = redondearAng(theta);			// Se redondea el ángulo al eje más cercano.
 
 	if(cellX - coordX == 0){			// Pendiente de la recta infinito.
@@ -835,9 +725,9 @@ bool go(int cellX, int cellY){
 	angulo = normalizarAngulo(angulo);		// Se normaliza el ángulo.
 
 	if(angulo == numPi){		// Si es PI, se va recto.
-		/*if(cellX == xTiraBlanca) {
-			detectarTira();
-		} else {*/
+		if(coordX != cellX && cellX == xTiraBlanca) {
+				detectarTira();
+		} else {
 				setSpeed(v,0);			// Se asigna la velocidad lineal.
 				readOdometry(x,y,theta);		// Se lee la odometría.
 
@@ -845,25 +735,10 @@ bool go(int cellX, int cellY){
 				float recorridoX = x;
 				float recorridoY = y;
 
-				/*float restoX = recorridoX / sizeCell;
-				float restoY = recorridoY / sizeCell;
-
-				restoX = restoX - (int)(restoX);
-				restoY = restoY - (int)(restoY);
-
-				recorridoX = recorridoX-(restoX*sizeCell);
-				recorridoY = recorridoY-(restoY*sizeCell);*/
-
-				nxtDisplayTextLine(2,"%f", x);
-				nxtDisplayTextLine(3,"%f", y);
-				nxtDisplayTextLine(4,"%f", theta);
 				// Se comprueba si se ha llegado al objetivo.
 				while(x <= recorridoX + sizeCell && y <= recorridoY + sizeCell
 						&& x >= recorridoX - sizeCell && y >= recorridoY - sizeCell){
 					readOdometry(x,y,theta);
-					nxtDisplayTextLine(2,"%f", x);
-					nxtDisplayTextLine(3,"%f", y);
-					nxtDisplayTextLine(4,"%f", theta);
 				}
 
 				setSpeed(0,0);	// Se paran los motores.
@@ -871,8 +746,7 @@ bool go(int cellX, int cellY){
 				hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
 				setSpeed(0,0);
-		//}
-
+			}
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
 		float angGiro = numPi/2;
@@ -882,14 +756,6 @@ bool go(int cellX, int cellY){
 		if(angulo < 0){			// Se comprueba la dirección de giro.
 			w = -w;
 		}
-
-		/*if(angGiro == numPi/2) {
-			setSpeed(0,w);
-			wait1Msec(1000);
-		} else {
-			setSpeed(0,w);
-			wait1Msec(2000);
-		}*/
 
 		girar(theta, angGiro, w);			// Se indica que gire.
 		readOdometry(x,y,theta);			// Se lee la odometría.
@@ -905,12 +771,6 @@ bool go(int cellX, int cellY){
 		}
 	}
 
-	readOdometry(x,y,theta);
-
-	displayTextLine(4,"%f",x);
-	displayTextLine(5,"%f",y);
-	displayTextLine(6,"%f",theta);
-
 	return hayObstaculo;			// Se devuelve si hay obstáculo.
 
 }
@@ -918,11 +778,12 @@ bool go(int cellX, int cellY){
 /*
 * Método que recorre el camino hasta llegar al objetivo.
 */
-void recorrerCamino(){
+void recorrerCamino(bool pintar){
 
 	int ind = 1;			// Indice para recorrer el camino.
 	bool seguir = true;			// Booleano que indica si hay que seguir.
 	bool hayObs = false;		// Booleano para saber si hay un obstáculo.
+	float x, y, theta;			//Variables para odometria.
 
 	while(seguir){			// Mientras no se llegue al objetivo.
 
@@ -938,7 +799,10 @@ void recorrerCamino(){
 		if(grid[pathX[ind-1]][pathY[ind-1]] == 0){
 			seguir = false;
 		}
-
+		readOdometry(x, y, theta);
+		if(pintar) {
+			drawRobot(x, y, theta, celdaOdoX,celdaOdoY);
+		}
 	}
 
 }

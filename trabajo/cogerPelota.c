@@ -15,7 +15,7 @@
 
 // Color a detectar y área del blop.
 #define GOAL_COLOR RED
-#define AREA_COLOR 2200
+#define AREA_COLOR 1600
 
 // Movimientos de las pinzas para cerrar y abrir.
 float movPinza = 40.0;			// Valor del movimiento de la pinza.
@@ -66,23 +66,60 @@ void aflojarPinza() {
 
 }
 
+/*
+* Método que comprueba si ha cogido la pelota.
+*/
 bool cogida() {
+
 	int _nblobs = 0;								// Número de blops detectados.
 	int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
-	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
-	for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 
+	get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
+
+	for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
+		if (bc[i] == GOAL_COLOR){			// Si el color coincide...
+			// Se calcula su área.
+			float area = (br[i] - bl[i])*(bb[i]-bt[i]);
+			if(area > AREA_COLOR-200 && bt[i] < 144) {		// Se compara para saber si el área corresponde.
+				return true;
+			}
+		}
+	}
+	return false;
+
+}
+
+/*
+* Método que comprueba si ha cogido la pelota.
+*/
+bool cogidaEval() {
+
+	wait1Msec(500);
+	setSpeed(0,numPi/2);
+
+	time1[T1] = 0;
+
+	while(time1[T1] <= 4000){
+		int _nblobs = 0;								// Número de blops detectados.
+		int_array bc, bl, bt, br, bb;		// Variables para la detección de la cámara.
+
+		get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
+
+		for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
 				// Se calcula su área.
 				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-				if(area > AREA_COLOR-200 && bt[i] < 144) {		// Se compara con el mayor área vista.
-					return true;
+				if(area > 5) {		// Se compara para saber si el área corresponde.
+					setSpeed(0,0);
+					abrirPinza();
+					return false;
 				}
-
 			}
-
 		}
-	return false;
+	}
+	setSpeed(0,0);
+	return true;
+
 }
 
 /*
@@ -119,23 +156,22 @@ void buscar(bool derecha){
  */
 bool atraparPelota(float area, float w){
 
-	nxtDisplayTextLine(5,"%.2f",area);		// Muestra el área por pantalla.
-
 	if(area < AREA_COLOR) {		// Si el area no es grande avanza hacia la pelota.
 
-		setSpeed(150,w);		// Fija la velocidad.
+		setSpeed(120,w);		// Fija la velocidad.
 		wait1Msec(1000);			// Espera un tiempo.
 		return false;		// Indica que no ha cogido la pelota.
 	}
 	else {			// Si el area es suficientemente grande intenta cogerla.
 
 		setSpeed(0, numPi/8);		// Se fija una velocidad angular para girar al robot.
-		wait1Msec(1000);			// Se espera un tiempo.
-		setSpeed(70,0);			// Se avanza linealmente.
-		wait1Msec(2000);		// Se espera un tiempo.
+		wait1Msec(750);			// Se espera un tiempo.
+		setSpeed(85,0);			// Se avanza linealmente.
+		wait1Msec(2500);		// Se espera un tiempo.
 		setSpeed(0, 0);	// Se detiene al robot.3.
 		cerrarPinza();	// Se cierra la pinza.
-		return true;	// Indica que se ha cogido la pelota.
+
+		return true;
 	}
 
 }
@@ -144,7 +180,8 @@ bool atraparPelota(float area, float w){
  * Método principal que centra al robot y coge la pelota.
  */
 void buscarAtrapar(){
-	abrirPinza();				//Se abre ls pinza
+
+	abrirPinza();				//Se abre la pinza.
 
 	bool continueTracking = true;		// Booleano para indicar si se sigue el tracking.
 	int _nblobs = 0;								// Número de blops detectados.
@@ -160,18 +197,18 @@ void buscarAtrapar(){
 	while (continueTracking) {			// Mientras se deba continuar el tracking...
 
 		get_blobs(cam, _nblobs, bc, bl, bt, br, bb);	// Se obtienen los blops.
-
+		areaMayor = 0.0;
 		for (int i = 0; i < _nblobs; i++) {		// Se recorren los blops.
 
 			if (bc[i] == GOAL_COLOR){			// Si el color coincide...
 				// Se calcula su área.
 				float area = (br[i] - bl[i])*(bb[i]-bt[i]);
-				if(area > 300) {
+				if(area > 10) {
 					encontrada = true;		// Se indica que se ha encontrado.
 					if(area > areaMayor) {		// Se compara con el mayor área vista.
 						areaMayor = area;		// Si es la mayor se guarda.
 						blopMayor = i;
-						int lastBloopIzq = bl[i];
+						lastBloopIzq = bl[i];
 					}
 				}
 			}
@@ -191,9 +228,5 @@ void buscarAtrapar(){
 	}
 
 	aflojarPinza();		// Afloja la pinza.
-	if(cogida()) {
-		setSpeed(0,numPi);
-		wait1Msec(1000);
-	}
 	setSpeed(0,0);
 }
