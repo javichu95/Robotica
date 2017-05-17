@@ -24,7 +24,7 @@ int finSBlancaY = 7;
 int finSNegraX = 11;
 int finSNegraY = 7;
 int pelotaX = 7;
-int pelotaY = 7;
+int pelotaY = 9;
 // Coordenadas para la tira blanca.
 int tiraEnNegro = 8;
 int tiraEnBlanco = 6;
@@ -131,7 +131,7 @@ bool reconocerPuerta() {
  * Sale del circuito detectando las paredes.
  */
 void salirDetect(float angulo) {
-	float v = 150.0, w = numPi/2;
+	float v = 250.0, w = numPi/2;
 	float x, y, theta;
 	readOdometry(x,y,theta);
 	float girar = theta;
@@ -149,7 +149,7 @@ void salirDetect(float angulo) {
 	setSpeed(0,0);
 	girarHasta(numPi/2,w);			//Se avanza hacia la salida
 	readOdometry(x, y, theta);
-	while(y <= 17) {						//Mientras este en el mapa.
+	while(redondearCoord(y)+inicialBlancaY <= 17) {						//Mientras este en el mapa.
 		float recorridoY = y;
 		setSpeed(v,0);						//Avanza dos baldosas.
 		while(y < recorridoY+sizeCell*2) {
@@ -161,6 +161,7 @@ void salirDetect(float angulo) {
 			setSpeed(v,0);
 			while(SensorValue[sonar] > distancia) {}
 			setSpeed(0,0);
+			girarHasta(numPi/2,w);			//Se avanza hacia la salida
 		}
 	}
 }
@@ -170,7 +171,7 @@ void salirDetect(float angulo) {
  */
 void salir(float angulo) {
 
-	float v = 150.0, w = numPi/2;
+	float v = 250.0, w = numPi/2;
 	float x, y, theta;
 	readOdometry(x,y,theta);
 	float girar = theta;
@@ -313,7 +314,6 @@ void ejecutarNegra(){
 * Método principal que lanza la ejecución de todo el programa.
 */
 task main(){
-
 	initConnections();		// Se inicializa la matriz de conexiones.
 
 	startTask(updateOdometry);		// Se inicializa la tarea de odometría.

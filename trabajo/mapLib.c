@@ -699,7 +699,7 @@ bool go(int cellX, int cellY){
 	readOdometry(x,y,theta);			// Se lee la odometría.
 
 	float w = numPi/2;			// Velocidad angular.
-	float v = 150;					// Velocidad lineal.
+	float v = 200;					// Velocidad lineal.
 
 	// Se saca la celda en la que estamos.
 	int coordX = redondearCoord(x) + celdaOdoX;
@@ -740,13 +740,13 @@ bool go(int cellX, int cellY){
 						&& x >= recorridoX - sizeCell && y >= recorridoY - sizeCell){
 					readOdometry(x,y,theta);
 				}
+			}
 
 				setSpeed(0,0);	// Se paran los motores.
 
 				hayObstaculo = detectObstacle(theta);			// Se comprueba si hay obstáculo.
 
 				setSpeed(0,0);
-			}
 	}
 	else{				// Se giran PI/2 o PI en la dirección adecuada.
 		float angGiro = numPi/2;
