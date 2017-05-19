@@ -67,7 +67,7 @@ void aflojarPinza() {
 }
 
 /*
-* Método que comprueba si ha cogido la pelota.
+* Método que comprueba si ha cogido la pelota para la carrera.
 */
 bool cogida() {
 
@@ -90,7 +90,7 @@ bool cogida() {
 }
 
 /*
-* Método que comprueba si ha cogido la pelota.
+* Método que comprueba si ha cogido la pelota para la evaluación.
 */
 bool cogidaEval() {
 
