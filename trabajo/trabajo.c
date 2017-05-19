@@ -134,7 +134,7 @@ bool reconocerPuerta() {
 }
 
 /*
- * Método 1 de salida: sale del circuito detectando las paredes de los colores.
+ * Método 1 de salida: sale del circuito detectando las paredes y haciendo giros de 90 grados.
  */
 void salirDetect(float angulo) {
 	float v = 250.0, w = numPi/2;
@@ -173,7 +173,8 @@ void salirDetect(float angulo) {
 }
 
 /*
- * Método 2 de salida: sale del circuito por la puerta correspondiente.
+ * Método 2 de salida: sale del circuito por la puerta correspondiente, detectando las paredes,
+ * y haciendo giros del ángulo necesario para encaminarse hacia la salida.
  */
 void salir(float angulo) {
 
